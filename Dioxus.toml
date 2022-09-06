@@ -26,17 +26,6 @@ reload_html = true
 # which files or dirs will be watcher monitoring
 watch_path = ["src", "public"]
 
-# include `assets` in web platform
-[web.resource]
+[application.tools]
 
-# CSS style file
-style = []
-
-# Javascript code file
-script = []
-
-[web.resource.dev]
-
-# Javascript code file
-# serve: [dev-server] only
-script = []
+binaryen = { wasm_opt = true }

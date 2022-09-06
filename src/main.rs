@@ -1,6 +1,7 @@
-use dioxus::prelude::*;
-
 pub mod components;
+pub mod routes;
+
+use dioxus::prelude::*;
 
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
@@ -12,18 +13,10 @@ fn main() {
 fn app(cx: Scope) -> Element {
     rsx!(cx,
         Router {
-            //Route { to: "/", Home {} }
+            Route { to: "/", routes::home::Page {} }
             //Route { to: "/auth", Auth {} }
-            Route { to: "/", Dashboard {} }
-            //Route { to: "", NotFound {} }
-        }
-    )
-}
-
-fn Dashboard(cx: Scope) -> Element {
-    rsx!(cx,
-        div {
-            components::timetable::Timetable {}
+            Route { to: "/app", routes::dashboard::Page {} }
+            Route { to: "", routes::not_found::Page {} }
         }
     )
 }
