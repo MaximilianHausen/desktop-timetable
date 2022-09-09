@@ -39,7 +39,15 @@ pub fn Timetable(cx: Scope) -> Element {
                 align_items: "flex-start",
                 gap: "var(--large-gap-size)",
 
-                days::WeekHeader {}
+                days::WeekHeader {
+                    days: vec![
+                        "Monday".to_owned(),
+                        "Tuesday".to_owned(),
+                        "Wednesday".to_owned(),
+                        "Thursday".to_owned(),
+                        "Friday".to_owned()
+                    ]
+                }
                 appointments::AppointmentBar {
                     appointment_lines: vec![
                         vec![

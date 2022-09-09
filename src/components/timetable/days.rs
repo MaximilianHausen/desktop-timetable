@@ -1,6 +1,15 @@
 use dioxus::prelude::*;
 
-pub fn WeekHeader(cx: Scope) -> Element {
+#[inline_props]
+pub fn WeekHeader(cx: Scope, days: Vec<String>) -> Element {
+    let week_header_elements = days
+        .iter()
+        .map(|day| rsx! {
+            Day {
+                name: day,
+            }
+        });
+
     rsx!(cx,
         div {
             display: "flex",
@@ -9,17 +18,13 @@ pub fn WeekHeader(cx: Scope) -> Element {
             align_items: "center",
             gap: "var(--large-gap-size)",
 
-            Day { day: "Monday" }
-            Day { day: "Tuesday" }
-            Day { day: "Wednesday" }
-            Day { day: "Thursday" }
-            Day { day: "Friday" }
+            week_header_elements
         }
     )
 }
 
 #[inline_props]
-pub fn Day<'a>(cx: Scope, day: &'a str) -> Element {
+pub fn Day<'a>(cx: Scope, name: &'a str) -> Element {
     rsx!(cx,
         div {
             width: "var(--lesson-size)",
@@ -30,7 +35,7 @@ pub fn Day<'a>(cx: Scope, day: &'a str) -> Element {
             outline: "1px solid black",
             border_radius: "10px",
 
-            "{day}"
+            "{name}"
         }
     )
 }
