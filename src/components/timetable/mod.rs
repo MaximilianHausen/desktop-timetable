@@ -4,6 +4,7 @@ pub mod lessons;
 pub mod times;
 
 use dioxus::prelude::*;
+use appointments::*;
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum BlockPosition {
@@ -38,7 +39,19 @@ pub fn Timetable(cx: Scope) -> Element {
                 gap: "var(--large-gap-size)",
 
                 days::WeekHeader {}
-                appointments::AppointmentBar {}
+                appointments::AppointmentBar {
+                    appointment_lines: vec![
+                        vec![
+                            AppointmentPropsEnum::Spacer(AppointmentSpacerProps {length: 2}),
+                            AppointmentPropsEnum::Appointment(AppointmentProps {length: 2, name: "Appointment"})
+                        ],
+                        vec![
+                            AppointmentPropsEnum::Appointment(AppointmentProps {length: 1, name: "Appointment"}),
+                            AppointmentPropsEnum::Spacer(AppointmentSpacerProps {length: 2}),
+                            AppointmentPropsEnum::Appointment(AppointmentProps {length: 1, name: "Appointment"})
+                        ]
+                    ]
+                }
                 lessons::LessonGrid {}
             }
         }

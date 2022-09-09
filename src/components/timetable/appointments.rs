@@ -1,6 +1,15 @@
 use dioxus::prelude::*;
 
-pub fn AppointmentBar(cx: Scope) -> Element {
+#[inline_props]
+pub fn AppointmentBar<'a>(cx: Scope, appointment_lines: Vec<Vec<AppointmentPropsEnum<'a>>>) -> Element {
+    let appointment_bar_elements = appointment_lines
+        .iter()
+        .map(|appointment_line| rsx! {
+            AppointmentLine {
+                appointments: appointment_line,
+            }
+        });
+
     rsx! {cx,
         div {
             display: "flex",
@@ -9,19 +18,7 @@ pub fn AppointmentBar(cx: Scope) -> Element {
             align_items: "center",
             gap: "var(--small-gap-size)",
 
-            AppointmentLine {
-                appointments: vec![
-                    AppointmentPropsEnum::Spacer(AppointmentSpacerProps {length: 2}),
-                    AppointmentPropsEnum::Appointment(AppointmentProps {length: 2, name: "Appointment"})
-                ],
-            }
-            AppointmentLine {
-                appointments: vec![
-                    AppointmentPropsEnum::Appointment(AppointmentProps {length: 1, name: "Appointment"}),
-                    AppointmentPropsEnum::Spacer(AppointmentSpacerProps {length: 2}),
-                    AppointmentPropsEnum::Appointment(AppointmentProps {length: 1, name: "Appointment"})
-                ]
-            }
+            appointment_bar_elements
         }
     }
 }
@@ -32,9 +29,13 @@ pub enum AppointmentPropsEnum<'a> {
     Spacer(AppointmentSpacerProps),
 }
 
-#[inline_props]
-pub fn AppointmentLine<'a>(cx: Scope, appointments: Vec<AppointmentPropsEnum<'a>>) -> Element {
-    let appointment_elements = appointments
+#[derive(Props, PartialEq)]
+pub struct AppointmentLineProps<'a> {
+    pub appointments: &'a Vec<AppointmentPropsEnum<'a>>,
+}
+
+pub fn AppointmentLine<'a>(cx: Scope<'a, AppointmentLineProps<'a>>) -> Element {
+    let appointment_elements = cx.props.appointments
         .iter()
         .map(|appointment| match appointment {
             AppointmentPropsEnum::Appointment(prop) => rsx! {
@@ -65,8 +66,8 @@ pub fn AppointmentLine<'a>(cx: Scope, appointments: Vec<AppointmentPropsEnum<'a>
 
 #[derive(Props, PartialEq)]
 pub struct AppointmentProps<'a> {
-    length: i8,
-    name: &'a str,
+    pub length: i8,
+    pub name: &'a str,
 }
 
 pub fn Appointment<'a>(cx: Scope<'a, AppointmentProps<'a>>) -> Element {
@@ -88,12 +89,12 @@ pub fn Appointment<'a>(cx: Scope<'a, AppointmentProps<'a>>) -> Element {
 
 #[derive(Props, PartialEq)]
 pub struct AppointmentSpacerProps {
-    length: i8,
+    pub length: i8,
 }
 
 pub fn AppointmentSpacer(cx: Scope<AppointmentSpacerProps>) -> Element {
     let gap_count = cx.props.length - 1;
-    rsx! (cx,
+    rsx!(cx,
         div {
             width: "calc(var(--lesson-size) * {cx.props.length} + var(--large-gap-size) * {gap_count})",
             height: "calc(1 * var(--base-unit))",

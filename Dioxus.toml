@@ -15,11 +15,8 @@ watch_path = ["src", "public"]
 index_on_404 = true
 
 [web.resource]
-style = []
-script = []
 
 [web.resource.dev]
-script = []
 
 [application.tools]
 binaryen = { wasm_opt = true }
