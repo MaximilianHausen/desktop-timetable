@@ -5,6 +5,7 @@ pub mod times;
 
 use dioxus::prelude::*;
 use appointments::*;
+use lessons::*;
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum BlockPosition {
@@ -52,7 +53,37 @@ pub fn Timetable(cx: Scope) -> Element {
                         ]
                     ]
                 }
-                lessons::LessonGrid {}
+                lessons::LessonGrid {
+                    lesson_columns: vec![
+                        vec![
+                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP1", None)),
+                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP1", None)),
+                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP1", None)),
+                            LessonPropsEnum::Single(SingleLessonProps::new(3, "WIP1", None)),
+                        ],
+                        vec![
+                            LessonPropsEnum::Multi(MultiLessonProps::new(vec![SingleLessonProps::new(1, "WIP2", None), SingleLessonProps::new(1, "WIP2", None)])),
+                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP2", None)),
+                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP2", None)),
+                        ],
+                        vec![
+                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP3", None)),
+                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP3", None)),
+                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP3", None)),
+                            LessonPropsEnum::Multi(MultiLessonProps::new(vec![SingleLessonProps::new(1, "WIP3", None), SingleLessonProps::new(2, "WIP3", None)])),
+                        ],
+                        vec![
+                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP4", None)),
+                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP4", None)),
+                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP4", None)),
+                        ],
+                        vec![
+                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP5", None)),
+                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP5", None)),
+                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP5", None)),
+                        ],
+                    ]
+                }
             }
         }
     )

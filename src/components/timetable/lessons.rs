@@ -1,7 +1,16 @@
 use dioxus::prelude::*;
 use crate::components::timetable::BlockPosition;
 
-pub fn LessonGrid(cx: Scope) -> Element {
+#[inline_props]
+pub fn LessonGrid<'a>(cx: Scope, lesson_columns: Vec<Vec<LessonPropsEnum<'a>>>) -> Element {
+    let lesson_grid_elements = lesson_columns
+        .iter()
+        .map(|appointment_line| rsx! {
+            LessonColumn {
+                lessons: appointment_line,
+            }
+        });
+
     rsx!(cx,
         div {
             display: "flex",
@@ -10,43 +19,7 @@ pub fn LessonGrid(cx: Scope) -> Element {
             align_items: "flex-start",
             gap: "var(--large-gap-size)",
 
-            LessonColumn {
-                lessons: vec![
-                    LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP1", None)),
-                    LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP1", None)),
-                    LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP1", None)),
-                    LessonPropsEnum::Single(SingleLessonProps::new(3, "WIP1", None)),
-                ]
-            }
-            LessonColumn {
-                lessons: vec![
-                    LessonPropsEnum::Multi(MultiLessonProps::new(vec![SingleLessonProps::new(1, "WIP2", None), SingleLessonProps::new(1, "WIP2", None)])),
-                    LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP2", None)),
-                    LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP2", None)),
-                ]
-            }
-            LessonColumn {
-                lessons: vec![
-                    LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP3", None)),
-                    LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP3", None)),
-                    LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP3", None)),
-                    LessonPropsEnum::Multi(MultiLessonProps::new(vec![SingleLessonProps::new(1, "WIP3", None), SingleLessonProps::new(2, "WIP3", None)])),
-                ]
-            }
-            LessonColumn {
-                lessons: vec![
-                    LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP4", None)),
-                    LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP4", None)),
-                    LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP4", None)),
-                ]
-            }
-            LessonColumn {
-                lessons: vec![
-                    LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP5", None)),
-                    LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP5", None)),
-                    LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP5", None)),
-                ]
-            }
+            lesson_grid_elements
         }
     )
 }
@@ -59,7 +32,7 @@ pub enum LessonPropsEnum<'a> {
 
 #[derive(Props, PartialEq, Clone)]
 pub struct LessonColumnProps<'a> {
-    pub lessons: Vec<LessonPropsEnum<'a>>,
+    pub lessons: &'a Vec<LessonPropsEnum<'a>>,
 }
 
 pub fn LessonColumn<'a>(cx: Scope<'a, LessonColumnProps<'a>>) -> Element {
