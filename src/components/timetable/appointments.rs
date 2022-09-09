@@ -23,18 +23,13 @@ pub fn AppointmentBar<'a>(cx: Scope, appointment_lines: Vec<Vec<AppointmentProps
     }
 }
 
-#[derive(PartialEq)]
 pub enum AppointmentPropsEnum<'a> {
     Appointment(AppointmentProps<'a>),
     Spacer(AppointmentSpacerProps),
 }
 
-#[derive(Props, PartialEq)]
-pub struct AppointmentLineProps<'a> {
-    pub appointments: &'a Vec<AppointmentPropsEnum<'a>>,
-}
-
-pub fn AppointmentLine<'a>(cx: Scope<'a, AppointmentLineProps<'a>>) -> Element {
+#[inline_props]
+pub fn AppointmentLine<'a>(cx: Scope, appointments: &'a Vec<AppointmentPropsEnum<'a>>) -> Element {
     let appointment_elements = cx.props.appointments
         .iter()
         .map(|appointment| match appointment {
@@ -64,17 +59,12 @@ pub fn AppointmentLine<'a>(cx: Scope<'a, AppointmentLineProps<'a>>) -> Element {
     }
 }
 
-#[derive(Props, PartialEq)]
-pub struct AppointmentProps<'a> {
-    pub length: i8,
-    pub name: &'a str,
-}
-
-pub fn Appointment<'a>(cx: Scope<'a, AppointmentProps<'a>>) -> Element {
-    let gap_count = cx.props.length - 1;
+#[inline_props]
+pub fn Appointment<'a>(cx: Scope, length: u8, name: &'a str) -> Element {
+    let gap_count = length - 1;
     rsx! {cx,
         div {
-            width: "calc(var(--lesson-size) * {cx.props.length} + var(--large-gap-size) * {gap_count})",
+            width: "calc(var(--lesson-size) * {length} + var(--large-gap-size) * {gap_count})",
             height: "calc(1 * var(--base-unit))",
             display: "flex",
             justify_content: "center",
@@ -82,21 +72,17 @@ pub fn Appointment<'a>(cx: Scope<'a, AppointmentProps<'a>>) -> Element {
             outline: "1px solid black",
             border_radius: "5px",
 
-            "{cx.props.name}"
+            "{name}"
         }
     }
 }
 
-#[derive(Props, PartialEq)]
-pub struct AppointmentSpacerProps {
-    pub length: i8,
-}
-
-pub fn AppointmentSpacer(cx: Scope<AppointmentSpacerProps>) -> Element {
-    let gap_count = cx.props.length - 1;
+#[inline_props]
+pub fn AppointmentSpacer(cx: Scope, length: u8) -> Element {
+    let gap_count = length - 1;
     rsx!(cx,
         div {
-            width: "calc(var(--lesson-size) * {cx.props.length} + var(--large-gap-size) * {gap_count})",
+            width: "calc(var(--lesson-size) * {length} + var(--large-gap-size) * {gap_count})",
             height: "calc(1 * var(--base-unit))",
         }
     )
