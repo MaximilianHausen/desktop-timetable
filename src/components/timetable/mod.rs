@@ -31,7 +31,14 @@ pub fn Timetable(cx: Scope) -> Element {
             align_items: "flex-end",
             gap: "var(--large-gap-size)",
 
-            times::TimeColumn {}
+            times::TimeColumn {
+                times: vec![
+                    vec!["8:00 - 8:45".to_owned(), "8:45 - 9:30".to_owned()],
+                    vec!["9:45 - 10:30".to_owned(), "10:30 - 11:15".to_owned()],
+                    vec!["11:35 - 12:20".to_owned(), "12:20 - 13:05".to_owned()],
+                    vec!["13:20 - 14:05".to_owned(), "14:05 - 14:50".to_owned(), "14:50 - 15:35".to_owned()],
+                ]
+            }
             div {
                 display: "flex",
                 flex_direction: "column",

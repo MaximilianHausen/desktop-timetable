@@ -1,7 +1,16 @@
 use dioxus::prelude::*;
 use crate::components::timetable::BlockPosition;
 
-pub fn TimeColumn(cx: Scope) -> Element {
+#[inline_props]
+pub fn TimeColumn(cx: Scope, times: Vec<Vec<String>>) -> Element {
+    let time_column_elements = times
+        .iter()
+        .map(|time| rsx! {
+            MultiTime {
+                times: time,
+            }
+        });
+
     rsx!(cx,
         div {
             display: "flex",
@@ -10,10 +19,7 @@ pub fn TimeColumn(cx: Scope) -> Element {
             align_items: "center",
             gap: "var(--large-gap-size)",
 
-            MultiTime { times: vec!["8:00 - 8:45", "8:45 - 9:30"] }
-            MultiTime { times: vec!["9:45 - 10:30", "10:30 - 11:15"] }
-            MultiTime { times: vec!["11:35 - 12:20", "12:20 - 13:05"] }
-            MultiTime { times: vec!["13:20 - 14:05", "14:05 - 14:50", "14:50 - 15:35"] }
+            time_column_elements
         }
     )
 }
@@ -51,7 +57,7 @@ pub fn SingleTime<'a>(cx: Scope, time: &'a str, border_style: BlockPosition) -> 
 }
 
 #[inline_props]
-pub fn MultiTime<'a>(cx: Scope, times: Vec<&'a str>) -> Element {
+pub fn MultiTime<'a>(cx: Scope, times: &'a Vec<String>) -> Element {
     let mut counter = 0;
     let times = times
         .iter()
