@@ -1,5 +1,6 @@
 pub mod components;
 pub mod routes;
+pub mod types;
 
 use dioxus::prelude::*;
 
@@ -19,4 +20,39 @@ fn app(cx: Scope) -> Element {
             Route { to: "", routes::not_found::Page {} }
         }
     )
+}
+
+pub mod state {
+    use std::time::Duration;
+    use crate::types::timetable::{Timetable, TimetableColumn};
+    use dioxus::fermi::Atom;
+    use gloo_storage::Storage;
+
+    pub static UPDATE_RATE: Atom<Duration> = |_| Duration::from_secs(gloo_storage::LocalStorage::get("homeworker_refresh_rate").unwrap_or(3600));
+
+    pub static TIMETABLE: Atom<Timetable> = |_| Timetable {
+        times: vec![],
+        columns: vec![
+            TimetableColumn {
+                name: "Monday".to_owned(),
+                lessons: vec![],
+            },
+            TimetableColumn {
+                name: "Tuesday".to_owned(),
+                lessons: vec![],
+            },
+            TimetableColumn {
+                name: "Wednesday".to_owned(),
+                lessons: vec![],
+            },
+            TimetableColumn {
+                name: "Thursday".to_owned(),
+                lessons: vec![],
+            },
+            TimetableColumn {
+                name: "Friday".to_owned(),
+                lessons: vec![],
+            }
+        ],
+    };
 }
