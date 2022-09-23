@@ -1,15 +1,2 @@
-[package]
-name = "desktop-dashboard"
-version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-dioxus = { version = "0.2.4", features = ["web", "router", "fermi"] }
-tokio = { version = "1.21.0", features = ["time"] }
-gloo-storage = "0.2.2"
-
-log = "0.4.6"
-wasm-logger = "0.2.0"
-console_error_panic_hook = "0.1.7"
+[workspace]
+members = ["backend", "frontend"]

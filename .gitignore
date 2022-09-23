@@ -1,5 +1,3 @@
-/dist
+/.idea
 /target
 Cargo.lock
-
-/.idea

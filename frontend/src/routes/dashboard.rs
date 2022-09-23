@@ -23,7 +23,9 @@ pub fn Page(cx: Scope) -> Element {
 
             div {}
 
-            crate::components::timetable::Timetable {}
+            crate::components::timetable::Timetable {
+                state: timetable.get().clone(),
+            }
 
             div {}
         }

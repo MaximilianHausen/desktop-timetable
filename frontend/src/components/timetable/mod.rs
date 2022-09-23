@@ -6,6 +6,7 @@ pub mod times;
 use dioxus::prelude::*;
 use appointments::*;
 use lessons::*;
+use crate::types::timetable::*;
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum BlockPosition {
@@ -15,7 +16,8 @@ pub enum BlockPosition {
     Bottom,
 }
 
-pub fn Timetable(cx: Scope) -> Element {
+#[inline_props]
+pub fn Timetable(cx: Scope, state: Timetable) -> Element {
     rsx!(cx,
         div {
             style: "
@@ -32,12 +34,13 @@ pub fn Timetable(cx: Scope) -> Element {
             gap: "var(--large-gap-size)",
 
             times::TimeColumn {
-                times: vec![
+                times: state.times.clone(),
+                /*vec![
                     vec!["8:00 - 8:45".to_owned(), "8:45 - 9:30".to_owned()],
                     vec!["9:45 - 10:30".to_owned(), "10:30 - 11:15".to_owned()],
                     vec!["11:35 - 12:20".to_owned(), "12:20 - 13:05".to_owned()],
                     vec!["13:20 - 14:05".to_owned(), "14:05 - 14:50".to_owned(), "14:50 - 15:35".to_owned()],
-                ]
+                ]*/
             }
             div {
                 display: "flex",
