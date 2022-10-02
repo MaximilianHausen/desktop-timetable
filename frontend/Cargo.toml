@@ -7,7 +7,6 @@ edition = "2021"
 dioxus = { version = "0.2.4", features = ["web", "router", "fermi"] }
 tokio = { version = "1.21.0", features = ["time"] }
 
-homeworker-api-client = { git = "https://github.com/MaximilianHausen/homeworker-api-client.git" }
 gloo-storage = "0.2.2"
 
 log = "0.4.6"
