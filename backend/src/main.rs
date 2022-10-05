@@ -28,7 +28,7 @@ async fn login(mut jar: PrivateCookieJar, body: String) -> Result<PrivateCookieJ
         Ok(response) => {
             jar = jar.add(Cookie::build("access-token", response.access_token)
                 .http_only(true).secure(true)
-                .expires(Expiration::DateTime(OffsetDateTime::now_utc() + Duration::days(1))).finish());
+                .expires(Expiration::DateTime(OffsetDateTime::now_utc() + Duration::seconds(response.expires_in as i64))).finish());
             jar = jar.add(Cookie::build("refresh-token", response.refresh_token)
                 .http_only(true).secure(true)
                 .expires(Expiration::from(OffsetDateTime::now_utc() + Duration::days(729))).finish());
