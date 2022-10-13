@@ -1,5 +1,5 @@
-use dioxus::prelude::*;
 use dioxus::fermi::prelude::*;
+use dioxus::prelude::*;
 
 pub fn Page(cx: Scope) -> Element {
     let timetable = use_atom_state(&cx, crate::state::TIMETABLE);

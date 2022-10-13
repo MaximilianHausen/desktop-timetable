@@ -1,8 +1,8 @@
+use dioxus::prelude::*;
+
 pub mod components;
 pub mod routes;
 pub mod types;
-
-use dioxus::prelude::*;
 
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
@@ -24,18 +24,27 @@ fn app(cx: Scope) -> Element {
 
 pub mod state {
     use std::time::Duration;
-    use crate::types::timetable::{Timetable, TimetableColumn};
+
     use dioxus::fermi::Atom;
     use gloo_storage::Storage;
+
+    use crate::types::timetable::{Lesson, LessonStatus, Subject, Timetable, TimetableColumn};
 
     pub static UPDATE_RATE: Atom<Duration> = |_| Duration::from_secs(gloo_storage::LocalStorage::get("homeworker_refresh_rate").unwrap_or(3600));
 
     pub static TIMETABLE: Atom<Timetable> = |_| Timetable {
-        times: vec![],
+        times: vec![vec!["Test Time".to_owned()]],
         columns: vec![
             TimetableColumn {
                 name: "Monday".to_owned(),
-                lessons: vec![],
+                lessons: vec![Some(Lesson {
+                    subject: Subject {
+                        full_name: "Test Subject".to_string(),
+                        short_name: "Test".to_string(),
+                        color: (0, 0, 0),
+                    },
+                    status: LessonStatus::Normal,
+                })],
             },
             TimetableColumn {
                 name: "Tuesday".to_owned(),
@@ -52,7 +61,7 @@ pub mod state {
             TimetableColumn {
                 name: "Friday".to_owned(),
                 lessons: vec![],
-            }
+            },
         ],
     };
 }

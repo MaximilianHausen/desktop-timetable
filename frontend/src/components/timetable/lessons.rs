@@ -1,60 +1,17 @@
 use dioxus::prelude::*;
+
 use crate::components::timetable::BlockPosition;
+use crate::types::timetable::Lesson;
 
 #[inline_props]
-pub fn LessonGrid<'a>(cx: Scope, lesson_columns: Vec<Vec<LessonPropsEnum<'a>>>) -> Element {
-    let lesson_grid_elements = lesson_columns
+pub fn LessonColumn(cx: Scope, lesson_groups: Vec<Vec<Option<Lesson>>>) -> Element {
+    let lessons = lesson_groups
         .iter()
-        .map(|appointment_line| rsx! {
-            LessonColumn {
-                lessons: appointment_line,
+        .map(|group| rsx!(
+            LessonGroup {
+                lessons: group.clone(),
             }
-        });
-
-    rsx!(cx,
-        div {
-            display: "flex",
-            flex_direction: "row",
-            justify_content: "center",
-            align_items: "flex-start",
-            gap: "var(--large-gap-size)",
-
-            lesson_grid_elements
-        }
-    )
-}
-
-#[derive(PartialEq, Clone)]
-pub enum LessonPropsEnum<'a> {
-    Single(SingleLessonProps<'a>),
-    Multi(MultiLessonProps<'a>),
-}
-
-#[derive(Props, PartialEq, Clone)]
-pub struct LessonColumnProps<'a> {
-    pub lessons: &'a Vec<LessonPropsEnum<'a>>,
-}
-
-pub fn LessonColumn<'a>(cx: Scope<'a, LessonColumnProps<'a>>) -> Element {
-    let lessons = cx.props
-        .lessons
-        .iter()
-        .map(|lesson| {
-            match lesson {
-                LessonPropsEnum::Single(prop) => rsx!(
-                    SingleLesson {
-                        length: prop.length,
-                        name: prop.name,
-                        border_style: BlockPosition::Alone,
-                    }
-                ),
-                LessonPropsEnum::Multi(prop) => rsx!(
-                    MultiLesson {
-                        lessons: prop.lessons.clone(),
-                    }
-                ),
-            }
-        });
+        ));
 
     rsx!(cx,
         div {
@@ -69,88 +26,54 @@ pub fn LessonColumn<'a>(cx: Scope<'a, LessonColumnProps<'a>>) -> Element {
     )
 }
 
-#[derive(Props, PartialEq, Clone)]
-pub struct SingleLessonProps<'a> {
-    pub length: i8,
-    pub name: &'a str,
-    pub border_style: Option<BlockPosition>,
-}
+#[inline_props]
+pub fn LessonGroup(cx: Scope, lessons: Vec<Option<Lesson>>) -> Element {
+    // Batch lessons
+    let mut batched_lessons: Vec<(&Option<Lesson>, u8)> = vec![];
 
-impl<'a> SingleLessonProps<'a> {
-    pub fn new(length: i8, name: &'a str, border_style: Option<BlockPosition>) -> Self {
-        Self {
-            length,
-            name,
-            border_style,
+    for lesson in lessons {
+        if batched_lessons.len() > 0 && batched_lessons.last().unwrap().0 == lesson {
+            batched_lessons.last_mut().unwrap().1 += 1;
+        } else {
+            batched_lessons.push((lesson, 1));
         }
     }
-}
 
-pub fn SingleLesson<'a>(cx: Scope<'a, SingleLessonProps<'a>>) -> Element {
-    let gap = match cx.props.border_style.as_ref().unwrap_or(&BlockPosition::Alone) {
-        BlockPosition::Alone => "0px",
-        BlockPosition::Top => "(var(--small-gap-size) / 2)",
-        BlockPosition::Middle => "var(--small-gap-size)",
-        BlockPosition::Bottom => "(var(--small-gap-size) / 2)",
-    };
-    let radius = match cx.props.border_style.as_ref().unwrap_or(&BlockPosition::Alone) {
-        BlockPosition::Alone => "10px",
-        BlockPosition::Top => "10px 10px 3px 3px",
-        BlockPosition::Middle => "3px 3px 3px 3px",
-        BlockPosition::Bottom => "3px 3px 10px 10px",
-    };
-    rsx!(cx,
-        div {
-            width: "var(--lesson-size)",
-            height: "calc({cx.props.length} * 0.3 * var(--lesson-size) - {gap})",
-            display: "flex",
-            justify_content: "center",
-            align_items: "center",
-            outline: "1px solid black",
-            border_radius: "{radius}",
+    // Render lessons
+    let mut lesson_elements: Vec<LazyNodes> = vec![];
 
-            "{cx.props.name}"
-        }
-    )
-}
+    for (i, batched_lesson) in batched_lessons.iter().enumerate() {
+        match batched_lesson.0 {
+            Some(lesson) => {
+                let prev_lesson = (batched_lessons.get(if i > 0 { i - 1 } else { std::usize::MAX })).and_then(|o| o.0.as_ref());
+                let next_lesson = batched_lessons.get(i + 1).and_then(|o| o.0.as_ref());
 
-#[derive(Props, PartialEq, Clone)]
-pub struct MultiLessonProps<'a> {
-    pub lessons: Vec<SingleLessonProps<'a>>,
-}
+                let border_style = if prev_lesson.is_none() && next_lesson.is_none() {
+                    BlockPosition::Alone
+                } else if prev_lesson.is_none() && next_lesson.is_some() {
+                    BlockPosition::Top
+                } else if prev_lesson.is_some() && next_lesson.is_none() {
+                    BlockPosition::Bottom
+                } else {
+                    BlockPosition::Middle
+                };
 
-impl<'a> MultiLessonProps<'a> {
-    pub fn new(lessons: Vec<SingleLessonProps<'a>>) -> Self {
-        Self { lessons }
-    }
-}
-
-pub fn MultiLesson<'a>(cx: Scope<'a, MultiLessonProps<'a>>) -> Element {
-    let mut counter = 0;
-    let lessons = cx.props
-        .lessons
-        .iter()
-        .map(|lesson| {
-            let border_style = if cx.props.lessons.len() == 1 {
-                BlockPosition::Alone
-            } else if counter == 0 {
-                BlockPosition::Top
-            } else if counter == cx.props.lessons.len() - 1 {
-                BlockPosition::Bottom
-            } else {
-                BlockPosition::Middle
-            };
-
-            counter += 1;
-
-            rsx!(cx,
-                SingleLesson {
-                    length: lesson.length,
-                    name: lesson.name,
-                    border_style: border_style,
+                lesson_elements.push(rsx!(
+                    Lesson {
+                        lesson: lesson.to_owned(),
+                        length: batched_lesson.1,
+                        border_style: border_style,
+                    }
+                ));
+            }
+            None => lesson_elements.push(rsx!(
+                LessonSpacer {
+                    length: batched_lesson.1,
                 }
-            )
-        });
+            )),
+        };
+    }
+
 
     rsx!(cx,
         div {
@@ -158,7 +81,48 @@ pub fn MultiLesson<'a>(cx: Scope<'a, MultiLessonProps<'a>>) -> Element {
             flex_direction: "column",
             gap: "var(--small-gap-size)",
 
-            lessons
+            lesson_elements
+        }
+    )
+}
+
+#[inline_props]
+fn Lesson(cx: Scope, lesson: Lesson, length: u8, border_style: BlockPosition) -> Element {
+    let gap = match border_style {
+        BlockPosition::Alone => "0px",
+        BlockPosition::Top => "(var(--small-gap-size) / 2)",
+        BlockPosition::Middle => "var(--small-gap-size)",
+        BlockPosition::Bottom => "(var(--small-gap-size) / 2)",
+    };
+
+    let radius = match border_style {
+        BlockPosition::Alone => "10px",
+        BlockPosition::Top => "10px 10px 3px 3px",
+        BlockPosition::Middle => "3px 3px 3px 3px",
+        BlockPosition::Bottom => "3px 3px 10px 10px",
+    };
+
+    rsx!(cx,
+        div {
+            width: "var(--lesson-size)",
+            height: "calc({length} * 0.3 * var(--lesson-size) - {gap})",
+            display: "flex",
+            justify_content: "center",
+            align_items: "center",
+            outline: "1px solid black",
+            border_radius: "{radius}",
+
+            "{lesson.subject.short_name}"
+        }
+    )
+}
+
+#[inline_props]
+fn LessonSpacer(cx: Scope, length: u8) -> Element {
+    rsx!(cx,
+        div {
+            width: "var(--lesson-size)",
+            height: "calc({length} * 0.3 * var(--lesson-size))",
         }
     )
 }

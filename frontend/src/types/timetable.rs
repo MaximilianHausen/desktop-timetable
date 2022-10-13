@@ -7,7 +7,7 @@ pub struct Timetable {
 #[derive(PartialEq, Clone)]
 pub struct TimetableColumn {
     pub name: String,
-    pub lessons: Vec<Lesson>,
+    pub lessons: Vec<Option<Lesson>>,
 }
 
 #[derive(PartialEq, Clone)]
@@ -27,5 +27,5 @@ pub struct Subject {
 pub enum LessonStatus {
     Normal,
     Cancelled,
-    Replaced(Box<Lesson>),
+    Replaced(Subject),
 }

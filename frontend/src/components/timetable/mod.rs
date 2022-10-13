@@ -1,12 +1,14 @@
+use dioxus::prelude::*;
+
+use appointments::*;
+use lessons::*;
+
+use crate::types::timetable::*;
+
 pub mod appointments;
 pub mod days;
 pub mod lessons;
 pub mod times;
-
-use dioxus::prelude::*;
-use appointments::*;
-use lessons::*;
-use crate::types::timetable::*;
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum BlockPosition {
@@ -18,6 +20,34 @@ pub enum BlockPosition {
 
 #[inline_props]
 pub fn Timetable(cx: Scope, state: Timetable) -> Element {
+    let lesson_groups: Vec<usize> = state.times.iter().map(|vec| vec.len()).collect();
+
+    let times = state.times.clone();
+    let column_names: Vec<String> = state.columns.iter().map(|column| column.name.clone()).collect();
+
+    let lesson_columns = state.columns.iter().map(|column| {
+        let mut groups: Vec<Vec<Option<Lesson>>> = vec![];
+
+        let mut pos = 0;
+        for group_size in &lesson_groups {
+            if pos >= column.lessons.len() {
+                break;
+            } else if pos + group_size >= column.lessons.len() {
+                groups.push(column.lessons[pos..column.lessons.len()].to_vec());
+                break;
+            } else {
+                groups.push(column.lessons[pos..(pos + group_size)].to_vec());
+                pos += group_size;
+            }
+        }
+
+        rsx!(
+            LessonColumn {
+                lesson_groups: groups,
+            }
+        )
+    });
+
     rsx!(cx,
         div {
             style: "
@@ -34,7 +64,7 @@ pub fn Timetable(cx: Scope, state: Timetable) -> Element {
             gap: "var(--large-gap-size)",
 
             times::TimeColumn {
-                times: state.times.clone(),
+                times: times,
                 /*vec![
                     vec!["8:00 - 8:45".to_owned(), "8:45 - 9:30".to_owned()],
                     vec!["9:45 - 10:30".to_owned(), "10:30 - 11:15".to_owned()],
@@ -50,13 +80,7 @@ pub fn Timetable(cx: Scope, state: Timetable) -> Element {
                 gap: "var(--large-gap-size)",
 
                 days::WeekHeader {
-                    days: vec![
-                        "Monday".to_owned(),
-                        "Tuesday".to_owned(),
-                        "Wednesday".to_owned(),
-                        "Thursday".to_owned(),
-                        "Friday".to_owned()
-                    ]
+                    days: column_names,
                 }
                 appointments::AppointmentBar {
                     appointment_lines: vec![
@@ -71,36 +95,14 @@ pub fn Timetable(cx: Scope, state: Timetable) -> Element {
                         ]
                     ]
                 }
-                lessons::LessonGrid {
-                    lesson_columns: vec![
-                        vec![
-                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP1", None)),
-                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP1", None)),
-                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP1", None)),
-                            LessonPropsEnum::Single(SingleLessonProps::new(3, "WIP1", None)),
-                        ],
-                        vec![
-                            LessonPropsEnum::Multi(MultiLessonProps::new(vec![SingleLessonProps::new(1, "WIP2", None), SingleLessonProps::new(1, "WIP2", None)])),
-                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP2", None)),
-                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP2", None)),
-                        ],
-                        vec![
-                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP3", None)),
-                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP3", None)),
-                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP3", None)),
-                            LessonPropsEnum::Multi(MultiLessonProps::new(vec![SingleLessonProps::new(1, "WIP3", None), SingleLessonProps::new(2, "WIP3", None)])),
-                        ],
-                        vec![
-                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP4", None)),
-                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP4", None)),
-                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP4", None)),
-                        ],
-                        vec![
-                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP5", None)),
-                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP5", None)),
-                            LessonPropsEnum::Single(SingleLessonProps::new(2, "WIP5", None)),
-                        ],
-                    ]
+                div {
+                    display: "flex",
+                    flex_direction: "row",
+                    justify_content: "center",
+                    align_items: "flex-start",
+                    gap: "var(--large-gap-size)",
+
+                    lesson_columns
                 }
             }
         }

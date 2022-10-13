@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+
 use crate::components::timetable::BlockPosition;
 
 #[inline_props]
@@ -6,7 +7,7 @@ pub fn TimeColumn(cx: Scope, times: Vec<Vec<String>>) -> Element {
     let time_column_elements = times
         .iter()
         .map(|time| rsx! {
-            MultiTime {
+            TimeGroup {
                 times: time,
             }
         });
@@ -25,7 +26,44 @@ pub fn TimeColumn(cx: Scope, times: Vec<Vec<String>>) -> Element {
 }
 
 #[inline_props]
-pub fn SingleTime<'a>(cx: Scope, time: &'a str, border_style: BlockPosition) -> Element {
+pub fn TimeGroup<'a>(cx: Scope, times: &'a Vec<String>) -> Element {
+    let mut counter = 0;
+    let times = times
+        .iter()
+        .map(|time| {
+            let border_style = if times.len() == 1 {
+                BlockPosition::Alone
+            } else if counter == 0 {
+                BlockPosition::Top
+            } else if counter == times.len() - 1 {
+                BlockPosition::Bottom
+            } else {
+                BlockPosition::Middle
+            };
+
+            counter += 1;
+
+            rsx!(
+                Time {
+                    time: time,
+                    border_style: border_style,
+                }
+            )
+        });
+
+    rsx!(cx,
+        div {
+            display: "flex",
+            flex_direction: "column",
+            gap: "var(--small-gap-size)",
+
+            times
+        }
+    )
+}
+
+#[inline_props]
+fn Time<'a>(cx: Scope, time: &'a str, border_style: BlockPosition) -> Element {
     let gap = match border_style {
         BlockPosition::Alone => "0px",
         BlockPosition::Top => "(var(--small-gap-size) / 2)",
@@ -51,43 +89,6 @@ pub fn SingleTime<'a>(cx: Scope, time: &'a str, border_style: BlockPosition) -> 
             border_radius: "{radius}",
 
             "{time}"
-        }
-
-    )
-}
-
-#[inline_props]
-pub fn MultiTime<'a>(cx: Scope, times: &'a Vec<String>) -> Element {
-    let mut counter = 0;
-    let times = times
-        .iter()
-        .map(|time| {
-            let border_style = if times.len() == 1 {
-                BlockPosition::Alone
-            } else if counter == 0 {
-                BlockPosition::Top
-            } else if counter == times.len() - 1 {
-                BlockPosition::Bottom
-            } else {
-                BlockPosition::Middle
-            };
-
-            counter += 1;
-            rsx!(
-                SingleTime {
-                    time: time,
-                    border_style: border_style,
-                }
-            )
-        });
-
-    rsx!(cx,
-        div {
-            display: "flex",
-            flex_direction: "column",
-            gap: "var(--small-gap-size)",
-
-            times
         }
     )
 }
