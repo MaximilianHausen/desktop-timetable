@@ -11,9 +11,9 @@ async fn main() {
     let key = Key::from(std::env::var("CLIENT_SECRET").unwrap().as_ref());
 
     let app = Router::new()
-        .route("/login", post(login))
-        .route("/logout", post(logout))
-        .route("/api/v2/*path", get(proxy_get).post(proxy_post).delete(proxy_delete))
+        .route("/homeworker/login", post(login))
+        .route("/homeworker/logout", post(logout))
+        .route("/homeworker/api/v2/*path", get(proxy_get).post(proxy_post).delete(proxy_delete))
         .layer(Extension(key));
 
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -48,14 +48,14 @@ async fn logout(jar: PrivateCookieJar) -> PrivateCookieJar {
 async fn proxy_get(jar: PrivateCookieJar, Path(path): Path<String>) -> Result<(StatusCode, String), (StatusCode, String)> {
     let access_token = match jar.get("access-token") {
         Some(cookie) => cookie.value().to_owned(),
-        None => return Err((StatusCode::UNAUTHORIZED, "".to_owned())),
+        None => return Err((StatusCode::UNAUTHORIZED, "".to_string())),
     };
 
-    let response = match reqwest::Client::new().get("https://homeworker.li/api/v2".to_owned() + &path)
-        .header("Authorization", "Bearer ".to_owned() + &access_token)
+    let response = match reqwest::Client::new().get("https://homeworker.li/api/v2".to_string() + &path)
+        .header("Authorization", "Bearer ".to_string() + &access_token)
         .send().await {
         Ok(response) => response,
-        Err(_) => return Err((StatusCode::INTERNAL_SERVER_ERROR, "".to_owned())),
+        Err(_) => return Err((StatusCode::INTERNAL_SERVER_ERROR, "".to_string())),
     };
 
     Ok((response.status(), response.text().await.unwrap()))
@@ -64,15 +64,15 @@ async fn proxy_get(jar: PrivateCookieJar, Path(path): Path<String>) -> Result<(S
 async fn proxy_post(jar: PrivateCookieJar, Path(path): Path<String>, body: String) -> Result<(StatusCode, String), (StatusCode, String)> {
     let access_token = match jar.get("access-token") {
         Some(cookie) => cookie.value().to_owned(),
-        None => return Err((StatusCode::UNAUTHORIZED, "".to_owned())),
+        None => return Err((StatusCode::UNAUTHORIZED, "".to_string())),
     };
 
-    let response = match reqwest::Client::new().post("https://homeworker.li/api/v2".to_owned() + &path)
-        .header("Authorization", "Bearer ".to_owned() + &access_token)
+    let response = match reqwest::Client::new().post("https://homeworker.li/api/v2".to_string() + &path)
+        .header("Authorization", "Bearer ".to_string() + &access_token)
         .body(body)
         .send().await {
         Ok(response) => response,
-        Err(_) => return Err((StatusCode::INTERNAL_SERVER_ERROR, "".to_owned())),
+        Err(_) => return Err((StatusCode::INTERNAL_SERVER_ERROR, "".to_string())),
     };
 
     Ok((response.status(), response.text().await.unwrap()))
@@ -81,15 +81,15 @@ async fn proxy_post(jar: PrivateCookieJar, Path(path): Path<String>, body: Strin
 async fn proxy_delete(jar: PrivateCookieJar, Path(path): Path<String>, body: String) -> Result<(StatusCode, String), (StatusCode, String)> {
     let access_token = match jar.get("access-token") {
         Some(cookie) => cookie.value().to_owned(),
-        None => return Err((StatusCode::UNAUTHORIZED, "".to_owned())),
+        None => return Err((StatusCode::UNAUTHORIZED, "".to_string())),
     };
 
-    let response = match reqwest::Client::new().delete("https://homeworker.li/api/v2".to_owned() + &path)
-        .header("Authorization", "Bearer ".to_owned() + &access_token)
+    let response = match reqwest::Client::new().delete("https://homeworker.li/api/v2".to_string() + &path)
+        .header("Authorization", "Bearer ".to_string() + &access_token)
         .body(body)
         .send().await {
         Ok(response) => response,
-        Err(_) => return Err((StatusCode::INTERNAL_SERVER_ERROR, "".to_owned())),
+        Err(_) => return Err((StatusCode::INTERNAL_SERVER_ERROR, "".to_string())),
     };
 
     Ok((response.status(), response.text().await.unwrap()))

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-pub fn Page(cx: Scope) -> Element {
+pub fn NotFoundPage(cx: Scope) -> Element {
     rsx!(cx,
         p { "Hier sehen sie eine tolle 404-Seite" }
         Link {

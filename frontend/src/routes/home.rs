@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-pub fn Page(cx: Scope) -> Element {
+pub fn HomePage(cx: Scope) -> Element {
     rsx!(cx,
         p { "Total tolle Homepage" }
         Link {

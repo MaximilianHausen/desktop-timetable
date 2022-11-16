@@ -60,7 +60,7 @@ pub fn LessonGroup(cx: Scope, lessons: Vec<Option<Lesson>>) -> Element {
 
                 lesson_elements.push(rsx!(
                     Lesson {
-                        lesson: lesson.to_owned(),
+                        lesson: lesson.clone(),
                         length: batched_lesson.1,
                         border_style: border_style,
                     }

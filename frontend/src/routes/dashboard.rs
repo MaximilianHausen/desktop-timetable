@@ -1,33 +1,50 @@
-use dioxus::fermi::prelude::*;
 use dioxus::prelude::*;
+use homeworker::Error;
 
-pub fn Page(cx: Scope) -> Element {
-    let timetable = use_atom_state(&cx, crate::state::TIMETABLE);
-    let update_rate = use_atom_state(&cx, crate::state::UPDATE_RATE);
+use crate::new_hw_client;
+use crate::types::timetable::Timetable;
 
-    use_future(&cx, (update_rate), |(update_rate)| async move {
-        loop {
-            // timetable.set()
-            tokio::time::sleep(*update_rate.get()).await;
-        }
+pub fn DashboardPage(cx: Scope) -> Element {
+    let timetable: &UseFuture<Result<Timetable, Error>> = use_future(&cx, (), |_| async move {
+        let raw_timetable = new_hw_client().get_timetable(0).await?;
+        //TODO: Timetable format conversion
+        Ok(Timetable { times: vec![], columns: vec![] })
     });
 
-    rsx!(cx,
-        div {
-            display: "flex",
-            flex_direction: "row",
-            justify_content: "space-between",
-            align_items: "center",
+    match timetable.value() {
+        Some(Ok(val)) => rsx!(cx,
+            div {
+                display: "flex",
+                flex_direction: "row",
+                justify_content: "space-between",
+                align_items: "center",
 
-            height: "calc(100vh - 16px)",
+                height: "calc(100vh - 16px)",
 
-            div {}
+                // Placeholders for page switching arrows
+                div {}
 
-            crate::components::timetable::Timetable {
-                state: timetable.get().clone(),
+                crate::components::timetable::Timetable {
+                    state: val.clone(),
+                }
+
+                div {}
             }
-
-            div {}
-        }
-    )
+        ),
+        Some(Err(err)) => {
+            match err {
+                Error::RequestError(err) => {
+                    let err_str = err.to_string();
+                    rsx!(cx, "{err_str}")
+                },
+                Error::ApiError(err) => {
+                    match err.code {
+                        401 => rsx!(cx, Redirect { to: "/login" }),
+                        _ => rsx!(cx, "Fehler beim Überprüfen des Anmeldestatus")
+                    }
+                }
+            }
+        },
+        None => None,
+    }
 }
