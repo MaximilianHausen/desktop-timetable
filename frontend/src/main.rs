@@ -9,7 +9,7 @@ pub mod types;
 
 pub const HW_CLIENT_HEADER: &str = "desktop-dashboard";
 pub const HW_CLIENT_ID: &str = "v1-23687";
-pub const HW_API_URL: &str = "https://dash.totodev.de/homeworker/api/v2/";
+pub const BACKEND_BASE_URL: &str = "https://dash.totodev.de/";
 
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
@@ -32,7 +32,7 @@ fn app(cx: Scope) -> Element {
 
 //TODO: Replace homeworker client management
 pub fn new_hw_client() -> HomeworkerClient {
-    HomeworkerClient::with_custom_url("_".to_string(), HW_CLIENT_HEADER.to_string(), HW_API_URL.to_string())
+    HomeworkerClient::with_custom_url("_".to_string(), HW_CLIENT_HEADER.to_string(), crate::BACKEND_BASE_URL.to_string() + "homeworker/api/v2")
 }
 
 pub mod state {

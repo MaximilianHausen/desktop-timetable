@@ -10,7 +10,7 @@ pub fn LoginPage(cx: Scope) -> Element {
     });
 
     match user.value() {
-        Some(Ok(val)) => rsx!(cx, Redirect { to: "/app" }),
+        Some(Ok(_)) => rsx!(cx, Redirect { to: "/app" }),
         Some(Err(err)) => {
             match err {
                 Error::RequestError(err) => {

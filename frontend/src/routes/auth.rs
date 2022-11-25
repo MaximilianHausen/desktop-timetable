@@ -1,19 +1,28 @@
 use dioxus::prelude::*;
 
-//TODO: Fix auth page
 pub fn AuthPage(cx: Scope) -> Element {
-    let a = "";
     let code = match use_route(&cx).query_param("code") {
-        Some(code) => code,
-        None => return rsx!(cx, Redirect { to: "" }),
+        Some(code) => code.to_string(),
+        None => return rsx!(cx, Redirect { to: "/" }),
     };
-    let state = match use_route(&cx).query_param("state") {
-        Some(state) => {
-            //TODO: Verify oauth state param
-            state
-        },
-        None => return rsx!(cx, Redirect { to: "" }),
-    };
-    homeworker::auth::exchange_token("a".to_string(), "b".to_string(), code.to_string());
-    rsx!(cx, "")
+
+    let success: &UseFuture<bool> = use_future(&cx, (), |()| async move {
+        reqwest::Client::new()
+            .post(crate::BACKEND_BASE_URL.to_string() + "homeworker/login")
+            .body(code)
+            .send()
+            .await
+            .is_ok()
+    });
+
+    match success.value() {
+        Some(s) => match s {
+            true => rsx!(cx, Redirect { to: "/app" }),
+            false => rsx!(cx,
+                p { "Bei der Authentifikation ist ein Fehler aufgetreten" }
+                Link { to: "/", "Zurück" }
+            )
+        }
+        None => None
+    }
 }
