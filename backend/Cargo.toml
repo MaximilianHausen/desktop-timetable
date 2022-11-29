@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 axum = "0.5.16"
+tower-http = { version = "0.3.4", features = ["cors"] }
 axum-extra = { version = "0.3.7", features = ["cookie-private"] }
 tokio = { version = "1.21.1", features = ["full"] }
 time = "0.3.15"

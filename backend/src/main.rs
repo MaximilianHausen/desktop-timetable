@@ -1,8 +1,8 @@
 use axum::extract::Path;
 use axum::http::header::HeaderMap;
-use axum::http::StatusCode;
+use axum::http::{Method, StatusCode};
 use axum::routing::{get, post};
-use axum::{Extension, Router};
+use axum::{Extension, Json, Router};
 use axum_extra::extract::cookie::{Cookie, Expiration, Key};
 use axum_extra::extract::PrivateCookieJar;
 use time::{Duration, OffsetDateTime};
@@ -20,9 +20,14 @@ async fn main() {
         .route("/homeworker/logout", post(logout))
         .route(
             "/homeworker/api/v2/*path",
-            get(proxy_get).post(proxy_post).delete(proxy_delete),
+            get(proxy).post(proxy).delete(proxy),
         )
-        .layer(Extension(key));
+        .layer(Extension(key))
+        .layer(
+            tower_http::cors::CorsLayer::new()
+                .allow_methods(tower_http::cors::Any)
+                .allow_origin(tower_http::cors::Any),
+        );
 
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 3000));
     axum::Server::bind(&addr)
@@ -31,7 +36,10 @@ async fn main() {
         .unwrap();
 }
 
-async fn login(mut jar: PrivateCookieJar, body: String) -> Result<PrivateCookieJar, StatusCode> {
+async fn login(
+    mut jar: PrivateCookieJar,
+    body: String,
+) -> Result<PrivateCookieJar, (StatusCode, Json<homeworker::types::Error>)> {
     match homeworker::auth::exchange_token(
         std::env::var("CLIENT_ID").unwrap(),
         std::env::var("CLIENT_SECRET").unwrap(),
@@ -61,8 +69,17 @@ async fn login(mut jar: PrivateCookieJar, body: String) -> Result<PrivateCookieJ
             Ok(jar)
         }
         Err(error) => match error {
-            homeworker::Error::RequestError(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
-            homeworker::Error::ApiError(err) => Err(StatusCode::from_u16(err.code).unwrap()),
+            homeworker::Error::RequestError(_) => Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(homeworker::types::Error {
+                    name: "Proxy".to_string(),
+                    message: "Error while forwarding the request".to_string(),
+                    code: StatusCode::INTERNAL_SERVER_ERROR.into(),
+                }),
+            )),
+            homeworker::Error::ApiError(err) => {
+                Err((StatusCode::from_u16(err.code).unwrap(), Json(err.clone())))
+            }
         },
     }
 }
@@ -72,126 +89,79 @@ async fn logout(jar: PrivateCookieJar) -> PrivateCookieJar {
         .remove(Cookie::named("refresh-token"))
 }
 
-async fn proxy_get(
-    jar: PrivateCookieJar,
-    headers: HeaderMap,
+async fn proxy(
+    cookie_jar: PrivateCookieJar,
     Path(path): Path<String>,
-) -> Result<(StatusCode, String), (StatusCode, String)> {
+    method: axum::http::Method,
+    headers: HeaderMap,
+    body: String,
+) -> Result<(StatusCode, String), (StatusCode, Json<homeworker::types::Error>)> {
     println!("Proxy to GET {}", path);
 
-    let access_token = match jar.get("access-token") {
+    let access_token = match cookie_jar.get("access-token") {
         Some(cookie) => cookie.value().to_owned(),
         None => {
             return Err((
                 StatusCode::UNAUTHORIZED,
-                "Use POST /homeworker/login to get an access cookie.".to_string(),
+                Json(new_error(
+                    StatusCode::UNAUTHORIZED,
+                    "Use POST /homeworker/login to get an access cookie.".to_string(),
+                )),
             ))
         }
     };
 
     let user_agent = match headers.get("User-Agent") {
         Some(header) => header.to_str().unwrap(),
-        None => return Err((
-            StatusCode::UNAUTHORIZED,
-            "No User-Agent header found. This may be required for accessing the homeworker API."
-                .to_string(),
-        )),
+        None => {
+            return Err((
+                StatusCode::UNAUTHORIZED,
+                Json(new_error(
+                    StatusCode::UNAUTHORIZED,
+                    "No User-Agent header found. This may be required for accessing the homeworker API.".to_string(),
+                )),
+            ))
+        }
     };
 
-    let response = match reqwest::Client::new()
-        .get("https://homeworker.li/api/v2".to_string() + &path)
+    let request_builder = match method {
+        Method::GET => {
+            reqwest::Client::new().get("https://homeworker.li/api/v2".to_string() + &path)
+        }
+        Method::POST => reqwest::Client::new()
+            .post("https://homeworker.li/api/v2".to_string() + &path)
+            .body(body),
+        Method::DELETE => reqwest::Client::new()
+            .delete("https://homeworker.li/api/v2".to_string() + &path)
+            .body(body),
+        _ => todo!(),
+    };
+
+    let response = match request_builder
         .header("Authorization", "Bearer ".to_string() + &access_token)
         .header("User-Agent", user_agent)
         .send()
         .await
     {
         Ok(response) => response,
-        Err(_) => return Err((StatusCode::INTERNAL_SERVER_ERROR, "".to_string())),
+        Err(_) => {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(new_error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Proxy could not reach the homeworker API".to_string(),
+                )),
+            ))
+        }
     };
 
     Ok((response.status(), response.text().await.unwrap()))
 }
 
-async fn proxy_post(
-    jar: PrivateCookieJar,
-    headers: HeaderMap,
-    Path(path): Path<String>,
-    body: String,
-) -> Result<(StatusCode, String), (StatusCode, String)> {
-    println!("Proxy to POST {}", path);
-
-    let access_token = match jar.get("access-token") {
-        Some(cookie) => cookie.value().to_owned(),
-        None => {
-            return Err((
-                StatusCode::UNAUTHORIZED,
-                "Use POST /homeworker/login to get an access cookie.".to_string(),
-            ))
-        }
-    };
-
-    let user_agent = match headers.get("User-Agent") {
-        Some(header) => header.to_str().unwrap(),
-        None => return Err((
-            StatusCode::UNAUTHORIZED,
-            "No User-Agent header found. This may be required for accessing the homeworker API."
-                .to_string(),
-        )),
-    };
-
-    let response = match reqwest::Client::new()
-        .post("https://homeworker.li/api/v2".to_string() + &path)
-        .header("Authorization", "Bearer ".to_string() + &access_token)
-        .header("User-Agent", user_agent)
-        .body(body)
-        .send()
-        .await
-    {
-        Ok(response) => response,
-        Err(_) => return Err((StatusCode::INTERNAL_SERVER_ERROR, "".to_string())),
-    };
-
-    Ok((response.status(), response.text().await.unwrap()))
-}
-
-async fn proxy_delete(
-    jar: PrivateCookieJar,
-    headers: HeaderMap,
-    Path(path): Path<String>,
-    body: String,
-) -> Result<(StatusCode, String), (StatusCode, String)> {
-    println!("Proxy to DELETE {}", path);
-
-    let access_token = match jar.get("access-token") {
-        Some(cookie) => cookie.value().to_owned(),
-        None => {
-            return Err((
-                StatusCode::UNAUTHORIZED,
-                "Use POST /homeworker/login to get an access cookie.".to_string(),
-            ))
-        }
-    };
-
-    let user_agent = match headers.get("User-Agent") {
-        Some(header) => header.to_str().unwrap(),
-        None => return Err((
-            StatusCode::UNAUTHORIZED,
-            "No User-Agent header found. This may be required for accessing the homeworker API."
-                .to_string(),
-        )),
-    };
-
-    let response = match reqwest::Client::new()
-        .post("https://homeworker.li/api/v2".to_string() + &path)
-        .header("Authorization", "Bearer ".to_string() + &access_token)
-        .header("User-Agent", user_agent)
-        .body(body)
-        .send()
-        .await
-    {
-        Ok(response) => response,
-        Err(_) => return Err((StatusCode::INTERNAL_SERVER_ERROR, "".to_string())),
-    };
-
-    Ok((response.status(), response.text().await.unwrap()))
+fn new_error(code: StatusCode, message: String) -> homeworker::types::Error {
+    homeworker::types::Error {
+        name: "Proxy".to_string(),
+        message,
+        code: code.into(),
+    }
 }
