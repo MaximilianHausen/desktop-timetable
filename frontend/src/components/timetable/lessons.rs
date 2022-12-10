@@ -32,7 +32,7 @@ pub fn LessonGroup(cx: Scope, lessons: Vec<Option<Lesson>>) -> Element {
     let mut batched_lessons: Vec<(&Option<Lesson>, u8)> = vec![];
 
     for lesson in lessons {
-        if batched_lessons.len() > 0 && batched_lessons.last().unwrap().0 == lesson {
+        if !batched_lessons.is_empty() && batched_lessons.last().unwrap().0 == lesson {
             batched_lessons.last_mut().unwrap().1 += 1;
         } else {
             batched_lessons.push((lesson, 1));

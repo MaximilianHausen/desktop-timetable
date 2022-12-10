@@ -78,7 +78,7 @@ async fn login(
                 }),
             )),
             homeworker::Error::ApiError(err) => {
-                Err((StatusCode::from_u16(err.code).unwrap(), Json(err.clone())))
+                Err((StatusCode::from_u16(err.code).unwrap(), Json(err)))
             }
         },
     }

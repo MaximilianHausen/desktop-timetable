@@ -6,7 +6,7 @@ use crate::{HW_CLIENT_ID, new_hw_client};
 
 pub fn LoginPage(cx: Scope) -> Element {
     let user: &UseFuture<Result<User, Error>> = use_future(&cx, (), |(_)| async move {
-        Ok(new_hw_client().get_me().await?)
+        new_hw_client().get_me().await
     });
 
     match user.value() {
@@ -15,7 +15,7 @@ pub fn LoginPage(cx: Scope) -> Element {
             match err {
                 Error::RequestError(err) => {
                     let err_str = err.to_string();
-                    rsx!(cx, "{err_str}")
+                    rsx!(cx, "Reqwest error: {err_str}")
                 },
                 Error::ApiError(err) => {
                     match err.code {
@@ -28,7 +28,7 @@ pub fn LoginPage(cx: Scope) -> Element {
 
                                 p { "Um den Stundenplan abzurufen, musst du dich mit Homeworker anmelden" }
                                 a {
-                                    href: "https://homeworker.li/auth/oauth2/authorize?client_id={HW_CLIENT_ID}&scopes=",
+                                    href: "https://homeworker.li/auth/oauth2/authorize?client_id={HW_CLIENT_ID}&scopes=timetable.timeline",
                                     "Login"
                                 }
                             }

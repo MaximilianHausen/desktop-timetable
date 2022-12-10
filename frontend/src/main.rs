@@ -9,7 +9,7 @@ pub mod types;
 
 pub const HW_CLIENT_HEADER: &str = "desktop-dashboard";
 pub const HW_CLIENT_ID: &str = "v1-23687";
-pub const BACKEND_BASE_URL: &str = "https://dash.totodev.de/";
+pub const BACKEND_BASE_URL: &str = "http://localhost:3000/";
 
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
