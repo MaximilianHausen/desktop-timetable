@@ -28,7 +28,7 @@ pub fn LoginPage(cx: Scope) -> Element {
 
                                 p { "Um den Stundenplan abzurufen, musst du dich mit Homeworker anmelden" }
                                 a {
-                                    href: "https://homeworker.li/auth/oauth2/authorize?client_id={HW_CLIENT_ID}&scopes=timetable.timeline",
+                                    href: "https://homeworker.li/auth/oauth2/authorize?client_id={HW_CLIENT_ID}&scopes=me courses.memberships timetable",
                                     "Login"
                                 }
                             }

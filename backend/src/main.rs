@@ -22,12 +22,7 @@ async fn main() {
             "/homeworker/api/v2/*path",
             get(proxy).post(proxy).delete(proxy),
         )
-        .layer(Extension(key))
-        .layer(
-            tower_http::cors::CorsLayer::new()
-                .allow_methods(tower_http::cors::Any)
-                .allow_origin(tower_http::cors::Any),
-        );
+        .layer(Extension(key));
 
     let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 3000));
     axum::Server::bind(&addr)
@@ -39,7 +34,9 @@ async fn main() {
 async fn login(
     mut jar: PrivateCookieJar,
     body: String,
-) -> Result<PrivateCookieJar, (StatusCode, Json<homeworker::types::Error>)> {
+) -> Result<PrivateCookieJar, (StatusCode, Json<homeworker::types::ErrorResponse>)> {
+    println!("Login with code {body}");
+
     match homeworker::auth::exchange_token(
         std::env::var("CLIENT_ID").unwrap(),
         std::env::var("CLIENT_SECRET").unwrap(),
@@ -52,6 +49,7 @@ async fn login(
                 Cookie::build("access-token", response.access_token)
                     .http_only(true)
                     .secure(true)
+                    .path("/homeworker")
                     .expires(Expiration::DateTime(
                         OffsetDateTime::now_utc() + Duration::seconds(response.expires_in as i64),
                     ))
@@ -61,6 +59,7 @@ async fn login(
                 Cookie::build("refresh-token", response.refresh_token)
                     .http_only(true)
                     .secure(true)
+                    .path("/homeworker")
                     .expires(Expiration::from(
                         OffsetDateTime::now_utc() + Duration::days(729),
                     ))
@@ -71,15 +70,16 @@ async fn login(
         Err(error) => match error {
             homeworker::Error::RequestError(_) => Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(homeworker::types::Error {
-                    name: "Proxy".to_string(),
-                    message: "Error while forwarding the request".to_string(),
-                    code: StatusCode::INTERNAL_SERVER_ERROR.into(),
-                }),
+                Json(
+                    homeworker::types::Error {
+                        name: "Proxy".to_string(),
+                        message: "Error while forwarding the request".to_string(),
+                        code: StatusCode::INTERNAL_SERVER_ERROR.into(),
+                    }
+                    .into(),
+                ),
             )),
-            homeworker::Error::ApiError(err) => {
-                Err((StatusCode::from_u16(err.code).unwrap(), Json(err)))
-            }
+            homeworker::Error::ApiError(err) => Err((StatusCode::BAD_GATEWAY, Json(err.into()))),
         },
     }
 }
@@ -95,18 +95,21 @@ async fn proxy(
     method: axum::http::Method,
     headers: HeaderMap,
     body: String,
-) -> Result<(StatusCode, String), (StatusCode, Json<homeworker::types::Error>)> {
-    println!("Proxy to GET {}", path);
+) -> Result<(StatusCode, String), (StatusCode, Json<homeworker::types::ErrorResponse>)> {
+    println!("Proxy to {method} {path}");
 
     let access_token = match cookie_jar.get("access-token") {
         Some(cookie) => cookie.value().to_owned(),
         None => {
             return Err((
                 StatusCode::UNAUTHORIZED,
-                Json(new_error(
-                    StatusCode::UNAUTHORIZED,
-                    "Use POST /homeworker/login to get an access cookie.".to_string(),
-                )),
+                Json(
+                    new_error(
+                        StatusCode::UNAUTHORIZED,
+                        "Use POST /homeworker/login to get an access cookie.".to_string(),
+                    )
+                    .into(),
+                ),
             ))
         }
     };
@@ -119,7 +122,7 @@ async fn proxy(
                 Json(new_error(
                     StatusCode::UNAUTHORIZED,
                     "No User-Agent header found. This may be required for accessing the homeworker API.".to_string(),
-                )),
+                ).into()),
             ))
         }
     };
@@ -147,10 +150,13 @@ async fn proxy(
         Err(_) => {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(new_error(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Proxy could not reach the homeworker API".to_string(),
-                )),
+                Json(
+                    new_error(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "Proxy could not reach the homeworker API".to_string(),
+                    )
+                    .into(),
+                ),
             ))
         }
     };

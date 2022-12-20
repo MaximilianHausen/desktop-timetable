@@ -9,7 +9,7 @@ pub mod types;
 
 pub const HW_CLIENT_HEADER: &str = "desktop-dashboard";
 pub const HW_CLIENT_ID: &str = "v1-23687";
-pub const BACKEND_BASE_URL: &str = "http://localhost:3000/";
+pub const BACKEND_BASE_URL: &str = "http://localhost/";
 
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
@@ -32,7 +32,11 @@ fn app(cx: Scope) -> Element {
 
 //TODO: Replace homeworker client management
 pub fn new_hw_client() -> HomeworkerClient {
-    HomeworkerClient::with_custom_url("_".to_string(), HW_CLIENT_HEADER.to_string(), crate::BACKEND_BASE_URL.to_string() + "homeworker/api/v2")
+    HomeworkerClient::with_custom_url(
+        "_".to_string(),
+        HW_CLIENT_HEADER.to_string(),
+        crate::BACKEND_BASE_URL.to_string() + "homeworker/api/v2",
+    )
 }
 
 pub mod state {
@@ -43,7 +47,11 @@ pub mod state {
 
     use crate::types::timetable::{Lesson, LessonStatus, Subject, Timetable, TimetableColumn};
 
-    pub static UPDATE_RATE: Atom<Duration> = |_| Duration::from_secs(gloo_storage::LocalStorage::get("homeworker_refresh_rate").unwrap_or(3600));
+    pub static UPDATE_RATE: Atom<Duration> = |_| {
+        Duration::from_secs(
+            gloo_storage::LocalStorage::get("homeworker_refresh_rate").unwrap_or(3600),
+        )
+    };
 
     pub static TIMETABLE: Atom<Timetable> = |_| Timetable {
         times: vec![vec!["Test Time".to_string()]],

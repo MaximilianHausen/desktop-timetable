@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "type": "cargo",
+            "name": "Run backend",
+            "cargoArgs": ["run"],
+            "cargoExtraArgs": ["-p", "backend"]
+        },
+        {
+            "type": "command",
+            "name": "Serve frontend",
+            "workingDir": "frontend/",
+            "program": "dioxus",
+            "args": ["serve"]
+        }
+    ]
+}
