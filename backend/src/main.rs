@@ -50,9 +50,7 @@ async fn login(
                     .http_only(true)
                     .secure(true)
                     .path("/homeworker")
-                    .expires(Expiration::DateTime(
-                        OffsetDateTime::now_utc() + Duration::seconds(response.expires_in as i64),
-                    ))
+                    .max_age(Duration::seconds(response.expires_in as i64))
                     .finish(),
             );
             jar = jar.add(
@@ -90,40 +88,87 @@ async fn logout(jar: PrivateCookieJar) -> PrivateCookieJar {
 }
 
 async fn proxy(
-    cookie_jar: PrivateCookieJar,
+    mut cookie_jar: PrivateCookieJar,
     Path(path): Path<String>,
     method: axum::http::Method,
     headers: HeaderMap,
     body: String,
-) -> Result<(StatusCode, String), (StatusCode, Json<homeworker::types::ErrorResponse>)> {
+) -> (
+    StatusCode,
+    PrivateCookieJar,
+    Result<String, Json<homeworker::types::ErrorResponse>>,
+) {
     println!("Proxy to {method} {path}");
 
     let access_token = match cookie_jar.get("access-token") {
         Some(cookie) => cookie.value().to_owned(),
         None => {
-            return Err((
-                StatusCode::UNAUTHORIZED,
-                Json(
-                    new_error(
+            // Try to refresh the token
+            let refresh_token = match cookie_jar.get("refresh-token") {
+                Some(cookie) => cookie.value().to_owned(),
+                None => {
+                    println!("Token refresh: No refresh token");
+                    return (
                         StatusCode::UNAUTHORIZED,
-                        "Use POST /homeworker/login to get an access cookie.".to_string(),
-                    )
-                    .into(),
-                ),
-            ))
+                        cookie_jar,
+                        Err(Json(
+                            new_error(
+                                StatusCode::UNAUTHORIZED,
+                                "No access or refresh token found.".to_string(),
+                            )
+                            .into(),
+                        )),
+                    );
+                }
+            };
+
+            match homeworker::auth::refresh_token(
+                std::env::var("CLIENT_ID").unwrap(),
+                std::env::var("CLIENT_SECRET").unwrap(),
+                refresh_token,
+            )
+            .await
+            {
+                Ok(response) => {
+                    // Set new access cookie
+                    println!("Token refresh: Success");
+                    cookie_jar = cookie_jar.add(
+                        Cookie::build("access-token", response.access_token.clone())
+                            .http_only(true)
+                            .secure(true)
+                            .path("/homeworker")
+                            .max_age(Duration::seconds(response.expires_in as i64))
+                            .finish(),
+                    );
+                    response.access_token
+                }
+                Err(e) => {
+                    println!("Token refresh: {:?}", e);
+                    return (
+                        StatusCode::UNAUTHORIZED,
+                        cookie_jar,
+                        Err(Json(
+                            new_error(
+                                StatusCode::UNAUTHORIZED,
+                                "Unable to refresh the access token.".to_string(),
+                            )
+                            .into(),
+                        )),
+                    );
+                }
+            }
         }
     };
 
     let user_agent = match headers.get("User-Agent") {
         Some(header) => header.to_str().unwrap(),
         None => {
-            return Err((
-                StatusCode::UNAUTHORIZED,
+            return (StatusCode::UNAUTHORIZED, cookie_jar, Err(
                 Json(new_error(
-                    StatusCode::UNAUTHORIZED,
+                        StatusCode::UNAUTHORIZED,
                     "No User-Agent header found. This may be required for accessing the homeworker API.".to_string(),
                 ).into()),
-            ))
+            ));
         }
     };
 
@@ -148,20 +193,25 @@ async fn proxy(
     {
         Ok(response) => response,
         Err(_) => {
-            return Err((
+            return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(
+                cookie_jar,
+                Err(Json(
                     new_error(
                         StatusCode::INTERNAL_SERVER_ERROR,
                         "Proxy could not reach the homeworker API".to_string(),
                     )
                     .into(),
-                ),
-            ))
+                )),
+            );
         }
     };
 
-    Ok((response.status(), response.text().await.unwrap()))
+    (
+        response.status(),
+        cookie_jar,
+        Ok(response.text().await.unwrap()),
+    )
 }
 
 fn new_error(code: StatusCode, message: String) -> homeworker::types::Error {
