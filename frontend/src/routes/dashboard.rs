@@ -12,38 +12,56 @@ pub fn DashboardPage(cx: Scope) -> Element {
 
         let mut timetable = Timetable {
             times: vec![],
-            columns: vec![]
+            columns: vec![],
         };
 
         // Find times (Currently hardcoded)
-        timetable.times.push(vec!["8:00 - 8:45".to_string(), "8:45 - 9:30".to_string()]);
-        timetable.times.push(vec!["9:45 - 10:30".to_string(), "10:30 - 11:15".to_string()]);
-        timetable.times.push(vec!["11:35 - 12:20".to_string(), "12:20 - 13:05".to_string()]);
-        timetable.times.push(vec!["13:20 - 14:05".to_string(), "14:05 - 14:50".to_string(), "14:05 - 15:35".to_string()]);
-
-
+        timetable
+            .times
+            .push(vec!["8:00 - 8:45".to_string(), "8:45 - 9:30".to_string()]);
+        timetable.times.push(vec![
+            "9:45 - 10:30".to_string(),
+            "10:30 - 11:15".to_string(),
+        ]);
+        timetable.times.push(vec![
+            "11:35 - 12:20".to_string(),
+            "12:20 - 13:05".to_string(),
+        ]);
+        timetable.times.push(vec![
+            "13:20 - 14:05".to_string(),
+            "14:05 - 14:50".to_string(),
+            "14:05 - 15:35".to_string(),
+        ]);
 
         // List lessons
-        for day in raw_timetable {
+        for day in raw_timetable.iter().take(5) {
             let mut last_position = 0;
             let mut lessons: Vec<Option<Lesson>> = vec![];
 
             for raw_lesson in day.lessons.iter().filter(|l| !l.is_break) {
                 let lesson = Lesson {
                     subject: Subject {
-                        full_name: raw_lesson.lessons.first().unwrap().name.clone(),
-                        short_name: raw_lesson.lessons.first().unwrap().short.clone(),
+                        full_name: match &raw_lesson.lessons {
+                            Some(l) => l.first().unwrap().name.clone(),
+                            None => "".to_owned(),
+                        },
+                        short_name: match &raw_lesson.lessons {
+                            Some(l) => l.first().unwrap().short.clone(),
+                            None => "".to_owned(),
+                        },
                         color: (255, 255, 255),
                     },
                     status: crate::types::timetable::LessonStatus::Normal,
                 };
 
                 // Fill empty lessons before
-                (0..raw_lesson.unit.positions.first().unwrap() - last_position).for_each(|_| lessons.push(None));
+                (last_position..*raw_lesson.unit.positions.first().unwrap() - 1)
+                    .for_each(|_| lessons.push(None));
                 last_position = *raw_lesson.unit.positions.last().unwrap();
 
                 // Add this lesson once for each position it occupies
-                (0..raw_lesson.unit.positions.len()).for_each(|_| lessons.push(Some(lesson.clone())));
+                (0..raw_lesson.unit.positions.len())
+                    .for_each(|_| lessons.push(Some(lesson.clone())));
             }
 
             timetable.columns.push(TimetableColumn {
@@ -75,19 +93,15 @@ pub fn DashboardPage(cx: Scope) -> Element {
                 div {}
             }
         ),
-        Some(Err(err)) => {
-            match err {
-                Error::RequestError(err) => {
-                    let err_str = err.to_string();
-                    rsx!(cx, "{err_str}")
-                },
-                Error::ApiError(err) => {
-                    match err.code {
-                        401 => rsx!(cx, Redirect { to: "/login" }),
-                        _ => rsx!(cx, "Fehler beim Überprüfen des Anmeldestatus")
-                    }
-                }
+        Some(Err(err)) => match err {
+            Error::RequestError(err) => {
+                let err_str = err.to_string();
+                rsx!(cx, "{err_str}")
             }
+            Error::ApiError(err) => match err.code {
+                401 => rsx!(cx, Redirect { to: "/login" }),
+                _ => rsx!(cx, "Fehler beim Überprüfen des Anmeldestatus"),
+            },
         },
         None => None,
     }
