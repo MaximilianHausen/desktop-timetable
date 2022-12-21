@@ -82,6 +82,7 @@ pub fn DashboardPage(cx: Scope) -> Element {
                 align_items: "center",
 
                 height: "calc(100vh - 16px)",
+                font_family: "'Rubik', sans-serif",
 
                 // Placeholders for page switching arrows
                 div {}

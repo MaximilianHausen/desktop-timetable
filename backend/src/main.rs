@@ -3,7 +3,7 @@ use axum::http::header::HeaderMap;
 use axum::http::{Method, StatusCode};
 use axum::routing::{get, post};
 use axum::{Extension, Json, Router};
-use axum_extra::extract::cookie::{Cookie, Expiration, Key};
+use axum_extra::extract::cookie::{Cookie, Expiration, Key, SameSite};
 use axum_extra::extract::PrivateCookieJar;
 use time::{Duration, OffsetDateTime};
 
@@ -50,6 +50,7 @@ async fn login(
                     .http_only(true)
                     .secure(true)
                     .path("/homeworker")
+                    .same_site(SameSite::Lax)
                     .max_age(Duration::seconds(response.expires_in as i64))
                     .finish(),
             );
@@ -58,6 +59,7 @@ async fn login(
                     .http_only(true)
                     .secure(true)
                     .path("/homeworker")
+                    .same_site(SameSite::Lax)
                     .expires(Expiration::from(
                         OffsetDateTime::now_utc() + Duration::days(729),
                     ))
@@ -137,6 +139,7 @@ async fn proxy(
                             .http_only(true)
                             .secure(true)
                             .path("/homeworker")
+                            .same_site(SameSite::Lax)
                             .max_age(Duration::seconds(response.expires_in as i64))
                             .finish(),
                     );

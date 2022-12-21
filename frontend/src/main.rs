@@ -20,6 +20,15 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     rsx!(cx,
+        style {
+            "@font-face {{
+                font-family: 'Rubik';
+                font-style: normal;
+                font-weight: 400;
+                src: url('./fonts/rubik-v23-latin-regular.woff2') format('woff2');
+            }}"
+        }
+
         Router {
             Route { to: "/", routes::home::HomePage {} }
             Route { to: "/login", routes::login::LoginPage {} }
