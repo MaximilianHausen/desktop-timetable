@@ -87,6 +87,7 @@ fn Time<'a>(cx: Scope, time: &'a str, border_style: BlockPosition) -> Element {
             align_items: "center",
             outline: "1px solid black",
             border_radius: "{radius}",
+            box_sizing: "border-box",
 
             "{time}"
         }

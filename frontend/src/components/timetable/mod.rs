@@ -33,7 +33,12 @@ pub fn Timetable(cx: Scope, state: Timetable) -> Element {
             if pos >= column.lessons.len() {
                 break;
             } else if pos + group_size >= column.lessons.len() {
-                groups.push(column.lessons[pos..column.lessons.len()].to_vec());
+                let mut last_group = column.lessons[pos..column.lessons.len()].to_vec();
+                // Fill empty trailing lessons
+                for _ in column.lessons.len()..pos + group_size {
+                    last_group.push(None);
+                }
+                groups.push(last_group);
                 break;
             } else {
                 groups.push(column.lessons[pos..(pos + group_size)].to_vec());
@@ -65,12 +70,6 @@ pub fn Timetable(cx: Scope, state: Timetable) -> Element {
 
             times::TimeColumn {
                 times: times,
-                /*vec![
-                    vec!["8:00 - 8:45".to_string(), "8:45 - 9:30".to_string()],
-                    vec!["9:45 - 10:30".to_string(), "10:30 - 11:15".to_string()],
-                    vec!["11:35 - 12:20".to_string(), "12:20 - 13:05".to_string()],
-                    vec!["13:20 - 14:05".to_string(), "14:05 - 14:50".to_string(), "14:50 - 15:35".to_string()],
-                ]*/
             }
             div {
                 display: "flex",
