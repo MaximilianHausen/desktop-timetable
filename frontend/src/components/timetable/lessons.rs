@@ -5,15 +5,14 @@ use crate::types::timetable::Lesson;
 
 #[inline_props]
 pub fn LessonColumn(cx: Scope, lesson_groups: Vec<Vec<Option<Lesson>>>) -> Element {
-    let lessons = lesson_groups
-        .iter()
-        .map(|group| rsx!(
-            LessonGroup {
-                lessons: group.clone(),
-            }
-        ));
+    let lessons = lesson_groups.iter().map(|group| {
+        rsx!(LessonGroup {
+            lessons: group.clone(),
+        })
+    });
 
-    rsx!(cx,
+    rsx!(
+        cx,
         div {
             display: "flex",
             flex_direction: "column",
@@ -45,7 +44,9 @@ pub fn LessonGroup(cx: Scope, lessons: Vec<Option<Lesson>>) -> Element {
     for (i, batched_lesson) in batched_lessons.iter().enumerate() {
         match batched_lesson.0 {
             Some(lesson) => {
-                let prev_lesson = (batched_lessons.get(if i > 0 { i - 1 } else { std::usize::MAX })).and_then(|o| o.0);
+                let prev_lesson =
+                    (batched_lessons.get(if i > 0 { i - 1 } else { std::usize::MAX }))
+                        .and_then(|o| o.0);
                 let next_lesson = batched_lessons.get(i + 1).and_then(|o| o.0);
 
                 let border_style = if prev_lesson.is_none() && next_lesson.is_none() {
@@ -60,29 +61,25 @@ pub fn LessonGroup(cx: Scope, lessons: Vec<Option<Lesson>>) -> Element {
 
                 let adjacent_count = (batched_lessons.len() - 1).clamp(0, 2) as u8;
 
-                lesson_elements.push(rsx!(
-                    Lesson {
-                        lesson: lesson.clone(),
-                        length: batched_lesson.1,
-                        border_style: border_style,
-                        adjacent_in_group: adjacent_count,
-                    }
-                ));
+                lesson_elements.push(rsx!(Lesson {
+                    lesson: lesson.clone(),
+                    length: batched_lesson.1,
+                    border_style: border_style,
+                    adjacent_in_group: adjacent_count,
+                }));
             }
             None => {
                 let adjacent_count = (batched_lessons.len() - 1).clamp(0, 2) as u8;
-                lesson_elements.push(rsx!(
-                    LessonSpacer {
-                        length: batched_lesson.1,
-                        adjacent_in_group: adjacent_count,
-                }
-            ))
-            },
+                lesson_elements.push(rsx!(LessonSpacer {
+                    length: batched_lesson.1,
+                    adjacent_in_group: adjacent_count,
+                }))
+            }
         };
     }
 
-
-    rsx!(cx,
+    rsx!(
+        cx,
         div {
             display: "flex",
             flex_direction: "column",
@@ -94,7 +91,13 @@ pub fn LessonGroup(cx: Scope, lessons: Vec<Option<Lesson>>) -> Element {
 }
 
 #[inline_props]
-fn Lesson(cx: Scope, lesson: Lesson, length: u8, border_style: BlockPosition, adjacent_in_group: u8) -> Element {
+fn Lesson(
+    cx: Scope,
+    lesson: Lesson,
+    length: u8,
+    border_style: BlockPosition,
+    adjacent_in_group: u8,
+) -> Element {
     let gap = match adjacent_in_group {
         0 => "0px",
         1 => "(var(--small-gap-size) / 2)",
@@ -109,20 +112,67 @@ fn Lesson(cx: Scope, lesson: Lesson, length: u8, border_style: BlockPosition, ad
         BlockPosition::Bottom => "3px 3px 10px 10px",
     };
 
-    rsx!(cx,
-        div {
-            width: "var(--lesson-size)",
-            height: "calc({length} * 0.3 * var(--lesson-size) - {gap})",
-            display: "flex",
-            justify_content: "center",
-            align_items: "center",
-            outline: "1px solid black",
-            border_radius: "{radius}",
-            box_sizing: "border-box",
+    match length {
+        1 => rsx!(cx,
+            div {
+                width: "var(--lesson-size)",
+                height: "calc({length} * 0.3 * var(--lesson-size) - {gap})",
+                outline: "1px solid black",
+                border_radius: "{radius}",
+                box_sizing: "border-box",
 
-            "{lesson.subject.short_name}"
-        }
-    )
+                display: "grid",
+                grid_template_columns: "repeat(2, 1fr)",
+                grid_template_rows: "repeat(1, 1fr)",
+
+                p {
+                    style: "place-self: center",
+                    margin: "0",
+                    grid_area: "1/1",
+                    "{lesson.subject.short_name}"
+                }
+                p {
+                    style: "place-self: center",
+                    margin: "0",
+                    grid_area: "1/2",
+                    "{lesson.subject.room}"
+                }
+            }
+        ),
+        2 => rsx!(cx,
+            div {
+                width: "var(--lesson-size)",
+                height: "calc({length} * 0.3 * var(--lesson-size) - {gap})",
+                outline: "1px solid black",
+                border_radius: "{radius}",
+                box_sizing: "border-box",
+
+                display: "grid",
+                grid_template_columns: "repeat(2, 1fr)",
+                grid_template_rows: "repeat(2, 1fr)",
+
+                p {
+                    style: "place-self: center",
+                    margin: "0",
+                    grid_area: "1/1",
+                    "{lesson.subject.short_name}"
+                }
+                p {
+                    style: "place-self: center",
+                    margin: "0",
+                    grid_area: "1/2",
+                    "{lesson.subject.room}"
+                }
+                p {
+                    style: "place-self: center",
+                    margin: "0",
+                    grid_area: "2/1/2/3",
+                    "{lesson.subject.teacher}"
+                }
+            }
+        ),
+        _ => panic!(),
+    }
 }
 
 #[inline_props]
@@ -134,7 +184,8 @@ fn LessonSpacer(cx: Scope, length: u8, adjacent_in_group: u8) -> Element {
         _ => "0px",
     };
 
-    rsx!(cx,
+    rsx!(
+        cx,
         div {
             width: "var(--lesson-size)",
             height: "calc({length} * 0.3 * var(--lesson-size) - {gap})",

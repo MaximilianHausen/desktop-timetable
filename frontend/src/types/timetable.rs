@@ -20,6 +20,8 @@ pub struct Lesson {
 pub struct Subject {
     pub full_name: String,
     pub short_name: String,
+    pub teacher: String,
+    pub room: String,
     pub color: (u8, u8, u8),
 }
 

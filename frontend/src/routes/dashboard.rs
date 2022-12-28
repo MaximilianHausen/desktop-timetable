@@ -39,19 +39,31 @@ pub fn DashboardPage(cx: Scope) -> Element {
             let mut lessons: Vec<Option<Lesson>> = vec![];
 
             for raw_lesson in day.lessons.iter().filter(|l| !l.is_break) {
-                let lesson = Lesson {
-                    subject: Subject {
-                        full_name: match &raw_lesson.lessons {
-                            Some(l) => l.first().unwrap().name.clone(),
-                            None => "".to_owned(),
+                let lesson = {
+                    let raw_lesson = raw_lesson.lessons.as_ref().and_then(|l| l.first());
+                    log::info!("{:?}", raw_lesson);
+                    Lesson {
+                        subject: Subject {
+                            full_name: match raw_lesson {
+                                Some(l) => l.name.clone(),
+                                None => "".to_owned(),
+                            },
+                            short_name: match raw_lesson {
+                                Some(l) => l.short.clone(),
+                                None => "".to_owned(),
+                            },
+                            teacher: match raw_lesson {
+                                Some(l) => l.teacher.clone(),
+                                None => "".to_owned(),
+                            },
+                            room: match raw_lesson {
+                                Some(l) => l.room.clone(),
+                                None => "".to_owned(),
+                            },
+                            color: (255, 255, 255),
                         },
-                        short_name: match &raw_lesson.lessons {
-                            Some(l) => l.first().unwrap().short.clone(),
-                            None => "".to_owned(),
-                        },
-                        color: (255, 255, 255),
-                    },
-                    status: crate::types::timetable::LessonStatus::Normal,
+                        status: crate::types::timetable::LessonStatus::Normal,
+                    }
                 };
 
                 // Fill empty lessons before
