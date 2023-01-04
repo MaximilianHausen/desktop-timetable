@@ -1,0 +1,4 @@
+:80 :443
+
+reverse_proxy /homeworker/* localhost:3000
+reverse_proxy /* localhost:8080
