@@ -8,8 +8,8 @@ pub mod routes;
 pub mod types;
 
 pub const HW_CLIENT_HEADER: &str = "desktop-dashboard";
-pub const HW_CLIENT_ID: &str = "v1-23687";
-pub const BACKEND_BASE_URL: &str = "http://localhost/";
+pub const HW_CLIENT_ID: &str = std::env!("CLIENT_ID");
+pub const BACKEND_BASE_URL: &str = std::env!("BACKEND_URL");
 
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());

@@ -1,11 +1,13 @@
 FROM rust:slim as builder
 ADD "https://api.github.com/repos/MaximilianHausen/desktop-dashboard/commits?per_page=1" docker_cachebust
+RUN cargo install dioxus-cli
 WORKDIR /usr/src
 RUN git clone https://github.com/MaximilianHausen/desktop-dashboard.git
-RUN cargo build -p backend --release
+WORKDIR /usr/src/frontend
+ENV CLIENT_ID="" BACKEND_URL=""
+RUN dioxus build --release
 
-FROM debian:stable-slim
-COPY --from=builder /usr/src/backend/target/release/backend /usr/local/bin
-ENV CLIENT_ID="" CLIENT_SECRET=""
-EXPOSE 3000
+FROM nginx:alpine
+COPY --from=builder /usr/src/frontend/dist /usr/share/nginx/html
+EXPOSE 80
 CMD ["/usr/local/bin/backend"]
