@@ -1,3 +1,5 @@
+use std::env::var;
+
 use axum::extract::{FromRef, Path};
 use axum::http::header::HeaderMap;
 use axum::http::{Method, StatusCode};
@@ -23,9 +25,9 @@ impl FromRef<AppState> for Key {
 async fn main() {
     println!(
         "Running for client id {}",
-        std::env::var("CLIENT_ID").unwrap()
+        var("CLIENT_ID").unwrap()
     );
-    let key = Key::from(std::env::var("CLIENT_SECRET").unwrap().as_ref());
+    let key = Key::from(var("CLIENT_SECRET").unwrap().as_ref());
 
     let app = Router::new()
         .route("/homeworker/login", post(login))
@@ -33,7 +35,7 @@ async fn main() {
         .route("/homeworker/*path", get(proxy).post(proxy).delete(proxy))
         .with_state(key);
 
-    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = std::net::SocketAddr::new(var("BIND_ADDR").unwrap().parse().unwrap(), 3000);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
