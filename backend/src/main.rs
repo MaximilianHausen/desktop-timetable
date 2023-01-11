@@ -35,7 +35,7 @@ async fn main() {
         .route("/homeworker/*path", get(proxy).post(proxy).delete(proxy))
         .with_state(key);
 
-    let addr = std::net::SocketAddr::new(var("BIND_ADDR").unwrap().parse().unwrap(), 3000);
+    let addr = std::net::SocketAddr::new(var("BIND_ADDR").unwrap_or("127.0.0.1".to_owned()).parse().unwrap(), 3000);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
