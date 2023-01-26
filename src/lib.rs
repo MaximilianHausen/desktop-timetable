@@ -1,3 +1,5 @@
+#![feature(async_closure)]
+
 use leptos::*;
 use log::debug;
 use wasm_bindgen::prelude::*;

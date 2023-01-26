@@ -7,7 +7,9 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-leptos = { version = "0.1.0", default-features = false, features = ["miniserde"] }
+homeworker = { git = "https://github.com/MaximilianHausen/homeworker-api-client.git" }
+
+leptos = { version = "0.1.0", default-features = false, features = ["serde"] }
 leptos_meta = { version = "0.1.0" }
 leptos_router = { version = "0.1.0" }
 
@@ -16,8 +18,11 @@ tower = { version = "0.4", optional = true  }
 tower-http = { version = "0.3", features = ["fs"], optional = true  }
 axum = { version = "0.6", optional = true }
 leptos_axum = { version = "0.1.0", optional = true }
+http = { version = "0.2", optional = true }
 
 wasm-bindgen = "0.2"
+serde = { version = "1", features = ["derive"] }
+cfg-if = "1"
 
 log = "0.4"
 simple_logger = "4"
@@ -32,6 +37,7 @@ ssr = [
   "dep:tower-http",
   "dep:axum",
   "dep:leptos_axum",
+  "dep:http",
   "leptos/ssr",
   "leptos_meta/ssr",
   "leptos_router/ssr",

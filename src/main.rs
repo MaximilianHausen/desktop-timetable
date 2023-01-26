@@ -2,11 +2,12 @@ use axum::{
     body::{Body, BoxBody},
     extract::{FromRef, State},
     http::{Request, Response, StatusCode, Uri},
+    routing::post,
     Router,
 };
 use desktop_timetable::app::*;
 use leptos::{get_configuration, view, LeptosOptions};
-use leptos_axum::generate_route_list;
+use leptos_axum::{generate_route_list, handle_server_fns};
 use log::*;
 use tower::util::ServiceExt;
 use tower_http::services::ServeDir;
@@ -24,14 +25,15 @@ impl FromRef<AppState> for LeptosOptions {
 
 #[tokio::main]
 async fn main() {
+    simple_logger::init_with_level(log::Level::Info).expect("couldn't initialize logging");
+
     let conf = get_configuration(Some("Cargo.toml")).await.unwrap();
     let leptos_options = conf.leptos_options;
     let routes = generate_route_list(|cx| view! { cx, <App/> }).await;
 
-    simple_logger::init_with_level(log::Level::Info).expect("couldn't initialize logging");
-
     let mut router = Router::new()
         //.leptos_routes(leptos_options.clone(), routes, |cx| view! { cx, <App/> })
+        .route("/serverfn/*path", post(handle_server_fns))
         .fallback(file_handler)
         .with_state(AppState {
             leptos_options: leptos_options.clone(),
