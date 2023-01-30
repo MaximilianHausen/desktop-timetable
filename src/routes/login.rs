@@ -1,70 +1,88 @@
-use cfg_if::cfg_if;
 use leptos::*;
 
-#[cfg(feature = "ssr")]
 use crate::app::HomeworkerContext;
 
 #[component]
 pub fn LoginPage(cx: Scope) -> impl IntoView {
-    cfg_if! {
-        if #[cfg(feature = "ssr")] {
-            let hw_context = use_context::<HomeworkerContext>(cx).unwrap();
+    // TODO: Maybe move to a custom route in axum and do the redirect checks before handing off to leptos
 
-            let login_status = create_resource(
-                cx,
-                || (),
-                async move |_| {
-                    homeworker::HomeworkerClient::new(
-                        (hw_context.client_id)(),
-                        "desktop-timetable".to_owned(),
-                    )
-                    .get_me()
-                    .await
-                    .is_ok()
-                },
-            );
+    // Default used when no context is provided during hydration
+    let hw_context = use_context::<HomeworkerContext>(cx).unwrap_or(HomeworkerContext {
+        client_id: create_signal(cx, "".to_owned()).0,
+        access_token: create_signal(cx, None).0,
+        refresh_token: create_signal(cx, None).0,
+    });
 
-            view! { cx,
-                <Transition fallback=move || { None::<View> }>
-                    {move || {
-                        match login_status.read() {
-                            Some(value) => {
-                                if value {
-                                    // TODO: Cunfigurable base URL
-                                    // Redirect to app
-                                    Some(view! { cx,
-                                        <script>
-                                            "window.location.href = \"https://example.com\""
-                                        </script>
-                                        <meta http-equiv="refresh" content="0; url=https://example.com/" />
-                                        <a href="https://example.com">"Redirect"</a>
-                                    }.into_view(cx))
-                                } else {
-                                    // Show login page
-                                    Some(view! { cx,
-                                        <div class="font-rubik dark:bg-zinc-900 dark:text-white w-screen h-screen flex flex-col justify-center items-center">
-                                            <div class="w-96 p-4 border rounded-xl dark:border-zinc-400">
-                                                <h1 class="text-center mb-4">"Anmelden mit Homeworker"</h1>
-                                                <p class="mb-4">"Um den Stundenplan abzurufen, musst du dich mit Homeworker anmelden"</p>
-                                                <a href={format!("https://homeworker.li/auth/oauth2/authorize?client_id={}&scopes=me courses.memberships timetable", (hw_context.client_id)())}>
-                                                    <div class="h-9 bg-sky-500 hover:bg-sky-400 rounded-xl flex justify-center items-center">
-                                                        "Anmelden"
-                                                    </div>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    }.into_view(cx))
-                                }
-                            },
-                            None => {
-                                None::<View>
-                            }
-                        }
-                    }}
-                </Transition>
+    let login_status = create_resource(
+        cx,
+        || (),
+        async move |_| {
+            let access_token = (hw_context.access_token)();
+            if access_token.is_none() {
+                return false;
             }
-        } else {
-            None::<View>
-        }
+            let response = homeworker::HomeworkerClient::new(
+                access_token.unwrap(),
+                "desktop-timetable".to_owned(),
+            )
+            .get_me()
+            .await;
+
+            // FIXME: This is NOT a solution (For some reason, homeworker doesn't return all fields with this token,
+            // so deserialization errors are ignored)
+            response.is_ok()
+                || match response.err().unwrap() {
+                    homeworker::Error::RequestError(_) => true,
+                    homeworker::Error::ApiError(_) => false,
+                }
+        },
+    );
+
+    let login_url = create_resource(
+        cx,
+        || (),
+        async move |_| {
+            format!("https://homeworker.li/auth/oauth2/authorize?client_id={}&scopes=me courses.memberships timetable", (hw_context.client_id)())
+        },
+    );
+
+    view! { cx,
+        // TODO: Remove fullscreen div, put classes on body
+        <div class="font-rubik dark:bg-zinc-900 dark:text-white w-screen h-screen flex flex-col justify-center items-center">
+        <Transition fallback=move || { None::<View> }>
+            {move || {
+                match login_status.read() {
+                    Some(value) => {
+                        if value {
+                            // Redirect to app
+                            Some(view! { cx,
+                                <script>
+                                    "window.location.href = \"/app\""
+                                </script>
+                                <meta http-equiv="refresh" content="0; url=/app" />
+                                <a href="/app">"Redirect"</a>
+                            }.into_view(cx))
+                        } else {
+                            // Show login page
+                            Some(view! { cx,
+                                <div class="w-96 p-4 border rounded-xl dark:border-zinc-400">
+                                    <h1 class="text-center mb-4">"Anmelden mit Homeworker"</h1>
+                                    <p class="mb-4">"Um den Stundenplan abzurufen, musst du dich mit Homeworker anmelden"</p>
+                                    <a href=login_url.read()>
+                                        <div class="h-9 bg-sky-500 hover:bg-sky-400 rounded-xl flex justify-center items-center">
+                                            "Anmelden"
+                                        </div>
+                                    </a>
+                                </div>
+                            }.into_view(cx))
+                        }
+                    },
+                    None => {
+                        None::<View>
+                    }
+                }
+            }}
+        </Transition>
+        </div>
     }
 }
