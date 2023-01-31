@@ -59,9 +59,18 @@ async fn main() {
 
 async fn leptos_route_handler(
     State(leptos_options): State<LeptosOptions>,
-    cookies: PrivateCookieJar,
+    mut cookies: PrivateCookieJar,
     request: Request<Body>,
-) -> Response {
+) -> impl IntoResponse {
+    if cookies.get("access-token") == None && cookies.get("refresh-token") != None {
+        cookies = refresh_token(
+            cookies,
+            std::env::var("HW_CLIENT_ID").unwrap(),
+            std::env::var("HW_SECRET").unwrap(),
+        )
+        .await;
+    }
+
     let client_id = std::env::var("HW_CLIENT_ID").unwrap();
     let access_token = cookies.get("access-token").map(|c| c.value().to_owned());
     let refresh_token = cookies.get("refresh-token").map(|c| c.value().to_owned());
@@ -80,7 +89,37 @@ async fn leptos_route_handler(
         },
         |cx| view! { cx, <App/> },
     );
-    handler(request).await.into_response()
+
+    (cookies, handler(request).await)
+}
+
+async fn refresh_token(
+    cookies: PrivateCookieJar,
+    client_id: String,
+    client_secret: String,
+) -> PrivateCookieJar {
+    let refresh_token = match cookies.get("refresh-token") {
+        Some(cookie) => cookie.value().to_owned(),
+        None => {
+            return cookies;
+        }
+    };
+
+    match homeworker::auth::refresh_token(client_id, client_secret, refresh_token).await {
+        Ok(response) => cookies.add(
+            Cookie::build("access-token", response.access_token.clone())
+                .http_only(true)
+                .secure(true)
+                .path("/homeworker")
+                .same_site(SameSite::Lax)
+                .max_age(Duration::seconds(response.expires_in as i64))
+                .finish(),
+        ),
+        Err(e) => {
+            log::error!("Token refresh failed: {:?}", e);
+            return cookies;
+        }
+    }
 }
 
 #[derive(Deserialize)]
