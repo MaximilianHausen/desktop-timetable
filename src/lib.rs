@@ -8,6 +8,7 @@ use crate::app::*;
 
 pub mod app;
 pub mod routes;
+pub mod types;
 
 #[wasm_bindgen]
 pub fn hydrate() {
