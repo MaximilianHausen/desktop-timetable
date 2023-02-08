@@ -7,6 +7,7 @@ use wasm_bindgen::prelude::*;
 use crate::app::*;
 
 pub mod app;
+pub mod components;
 pub mod routes;
 pub mod types;
 

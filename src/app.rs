@@ -2,6 +2,7 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
+use crate::routes::dashboard::*;
 use crate::routes::home::*;
 use crate::routes::login::*;
 
@@ -13,7 +14,7 @@ pub struct HomeworkerContext {
 }
 
 #[component]
-pub fn App(cx: Scope) -> impl IntoView {
+pub fn app(cx: Scope) -> impl IntoView {
     provide_meta_context(cx);
 
     view! { cx,
@@ -31,6 +32,7 @@ pub fn App(cx: Scope) -> impl IntoView {
             <Routes>
                 <Route path="/" view=move |cx| view! { cx, <HomePage/> } />
                 <Route path="/login" view=move |cx| view! { cx, <LoginPage/> } />
+                <Route path="/app" view=move |cx| view! { cx, <DashboardPage/> } />
             </Routes>
         </Router>
     }

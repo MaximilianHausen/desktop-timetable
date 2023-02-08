@@ -3,7 +3,7 @@ use leptos::*;
 use crate::app::HomeworkerContext;
 
 #[component]
-pub fn LoginPage(cx: Scope) -> impl IntoView {
+pub fn login_page(cx: Scope) -> impl IntoView {
     // TODO: Maybe move to a custom route in axum and do the redirect checks before handing off to leptos
 
     // Default used when no context is provided during hydration

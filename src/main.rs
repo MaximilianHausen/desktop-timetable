@@ -110,7 +110,6 @@ async fn refresh_token(
             Cookie::build("access-token", response.access_token.clone())
                 .http_only(true)
                 .secure(true)
-                .path("/homeworker")
                 .same_site(SameSite::Lax)
                 .max_age(Duration::seconds(response.expires_in as i64))
                 .finish(),
