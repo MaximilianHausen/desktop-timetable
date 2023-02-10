@@ -13,6 +13,12 @@ pub struct TimetableColumn {
 }
 
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+pub struct GroupedTimetableColumn {
+    pub name: String,
+    pub lessons: Vec<Vec<Option<Lesson>>>,
+}
+
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct Lesson {
     pub subject: Subject,
     pub status: LessonStatus,
