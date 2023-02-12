@@ -535,14 +535,6 @@ h2 {
   grid-column-start: 1;
 }
 
-.col-end-2 {
-  grid-column-end: 2;
-}
-
-.col-end-1 {
-  grid-column-end: 1;
-}
-
 .row-start-1 {
   grid-row-start: 1;
 }
@@ -553,18 +545,6 @@ h2 {
 
 .row-start-3 {
   grid-row-start: 3;
-}
-
-.row-end-1 {
-  grid-row-end: 1;
-}
-
-.row-end-2 {
-  grid-row-end: 2;
-}
-
-.row-end-3 {
-  grid-row-end: 3;
 }
 
 .mb-4 {
@@ -695,9 +675,9 @@ h2 {
   border-width: 1px;
 }
 
-.border-zinc-400 {
+.border-black {
   --tw-border-opacity: 1;
-  border-color: rgb(161 161 170 / var(--tw-border-opacity));
+  border-color: rgb(0 0 0 / var(--tw-border-opacity));
 }
 
 .bg-sky-500 {

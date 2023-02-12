@@ -106,7 +106,7 @@ pub fn dashboard_page(cx: Scope) -> impl IntoView {
 
     view! { cx,
         // TODO: Remove fullscreen div, put classes on body
-        <div class="font-rubik dark:bg-zinc-900 dark:text-white w-screen h-screen flex flex-col justify-center items-center">
+        <div class="font-rubik dark:bg-zinc-900 dark:text-white w-screen h-screen flex justify-center items-center">
         <Transition fallback=move || { None::<View> }>
             {move || {
                 match timetable_resource.read() {

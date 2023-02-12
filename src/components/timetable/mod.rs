@@ -62,22 +62,22 @@ pub fn timetable(cx: Scope, state: Timetable) -> impl IntoView {
     view! { cx,
         <div class="grid gap-4">
             // ========== Days ==========
-            <div class="row-start-1 col-start-2 row-end-1 col-end-2 flex gap-4">
+            <div class="row-start-1 col-start-2 flex gap-4">
                 <For
                     each=column_names
                     key=|s| s.clone()
                     view=move |name: String| view! { cx,
-                        <div class="w-44 h-10 flex justify-center items-center border border-zinc-400 rounded-lg">
+                        <div class="w-44 h-10 flex justify-center items-center border border-black dark:border-zinc-400 rounded-lg">
                             {name}
                         </div>
                     }
                 />
             </div>
             // ========== Appointments ==========
-            <div class="row-start-2 col-start-2 row-end-2 col-end-2 h-8 bg-orange-500">
+            <div class="row-start-2 col-start-2 h-8 bg-orange-500">
             </div>
             // ========== Times ==========
-            <div class="row-start-3 col-start-1 row-end-3 col-end-1 flex flex-col gap-4">
+            <div class="row-start-3 col-start-1 flex flex-col gap-4">
                 <For
                     each=time_groups
                     key=|g| g.clone()
@@ -110,7 +110,7 @@ pub fn timetable(cx: Scope, state: Timetable) -> impl IntoView {
 
                             counter += 1;
 
-                            let class = format!("min-w-[6rem] {height} p-3 flex justify-center items-center border border-zinc-400 {border}");
+                            let class = format!("min-w-[6rem] {height} p-3 flex justify-center items-center border border-black dark:border-zinc-400 {border}");
                             view! { cx,
                                 <div class=class>
                                     {time}
@@ -127,7 +127,7 @@ pub fn timetable(cx: Scope, state: Timetable) -> impl IntoView {
                 />
             </div>
             // ========== Lessons ==========
-            <div class="row-start-3 col-start-2 row-end-3 col-end-2 flex items-start gap-4">
+            <div class="row-start-3 col-start-2 flex items-start gap-4">
                 <For
                     each=grouped_lesson_columns
                     key=|c| c.name.clone()
@@ -225,7 +225,7 @@ fn lesson(
         BlockPosition::Bottom => "rounded-t-sm rounded-b-lg",
     };
 
-    let common_class = format!("w-44 border border-zinc-400 {border_class}");
+    let common_class = format!("w-44 border border-black dark:border-zinc-400 {border_class}");
 
     match length {
         1 => view! { cx,

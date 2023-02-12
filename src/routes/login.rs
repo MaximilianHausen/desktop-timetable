@@ -48,7 +48,7 @@ pub fn login_page(cx: Scope) -> impl IntoView {
 
     view! { cx,
         // TODO: Remove fullscreen div, put classes on body
-        <div class="font-rubik dark:bg-zinc-900 dark:text-white w-screen h-screen flex flex-col justify-center items-center">
+        <div class="font-rubik dark:bg-zinc-900 dark:text-white w-screen h-screen flex justify-center items-center">
         <Transition fallback=move || { None::<View> }>
             {move || {
                 match login_status.read() {
@@ -65,7 +65,7 @@ pub fn login_page(cx: Scope) -> impl IntoView {
                         } else {
                             // Show login page
                             Some(view! { cx,
-                                <div class="w-96 p-4 border rounded-xl dark:border-zinc-400">
+                                <div class="w-96 p-4 border rounded-xl border-black dark:border-zinc-400">
                                     <h1 class="text-center mb-4">"Anmelden mit Homeworker"</h1>
                                     <p class="mb-4">"Um den Stundenplan abzurufen, musst du dich mit Homeworker anmelden"</p>
                                     <a href=login_url.read()>
