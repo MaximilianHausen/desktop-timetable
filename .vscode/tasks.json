@@ -1,0 +1,44 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Tailwind run",
+            "type": "shell",
+            "command": "tailwindcss -i ./style/tailwind-input.css -o ./style/tailwind-output.css"
+        },
+        {
+            "label": "Leptos run",
+            "type": "shell",
+            "command": "cargo leptos serve"
+        },
+        {
+            "label": "Serve",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Tailwind run",
+                "Leptos run"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Tailwind watch",
+            "type": "shell",
+            "command": "tailwindcss -i ./style/tailwind-input.css -o ./style/tailwind-output.css --watch"
+        },
+        {
+            "label": "Leptos watch",
+            "type": "shell",
+            "command": "cargo leptos watch"
+        },
+        {
+            "label": "Serve watch",
+            "dependsOn": [
+                "Tailwind watch",
+                "Leptos watch"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}
