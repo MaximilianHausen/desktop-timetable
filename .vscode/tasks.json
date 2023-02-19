@@ -11,6 +11,11 @@
         {
             "label": "Leptos run",
             "type": "shell",
+            "options": {
+                "env": {
+                    "LEPTOS_OUTPUT_NAME": "desktop_timetable",
+                }
+            },
             "command": "cargo leptos serve"
         },
         {
@@ -30,6 +35,11 @@
         {
             "label": "Leptos watch",
             "type": "shell",
+            "options": {
+                "env": {
+                    "LEPTOS_OUTPUT_NAME": "desktop_timetable",
+                }
+            },
             "command": "cargo leptos watch"
         },
         {

@@ -29,7 +29,7 @@ pub struct AppState {
 async fn main() {
     simple_logger::init_with_level(log::Level::Info).expect("couldn't initialize logging");
 
-    let conf = get_configuration(Some("Cargo.toml")).await.unwrap();
+    let conf = get_configuration(None).await.unwrap();
     let leptos_options = conf.leptos_options;
     let routes = generate_route_list(|cx| view! { cx, <App/> }).await;
 
