@@ -7,7 +7,9 @@ RUN git clone https://github.com/MaximilianHausen/desktop-timetable.git /usr/src
 WORKDIR /usr/src
 RUN cargo leptos build -r
 
-FROM debian:stable-slim
+FROM debian
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get -yq install ca-certificates ; apt-get clean
 ENV HW_CLIENT_ID="CLIENT_ID" HW_SECRET="SECRETSECRETSECRETSECRETSECRETSECRETSECRETSECRETSECRETSECRETSECRET"
 ENV LEPTOS_OUTPUT_NAME="desktop_timetable" LEPTOS_SITE_ADDR="0.0.0.0:80"
 COPY --from=builder /usr/src/Cargo.toml /usr/bin/desktop_timetable/Cargo.toml
